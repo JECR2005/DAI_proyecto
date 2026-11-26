@@ -37,3 +37,5 @@ def recargar() -> None:
 # Sesión y negocio actuales (los fija el orquestador; las herramientas los usan al guardar).
 sesion_actual: contextvars.ContextVar[str] = contextvars.ContextVar("sesion_actual", default="sin_sesion")
 codigo_actual: contextvars.ContextVar[str | None] = contextvars.ContextVar("codigo_actual", default=None)
+# Módulos que el negocio ya tiene contratados (cliente que regresa): no se vuelven a cotizar.
+contratados_actual: contextvars.ContextVar[tuple] = contextvars.ContextVar("contratados_actual", default=())

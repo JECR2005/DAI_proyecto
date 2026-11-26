@@ -37,8 +37,10 @@ def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
     catalogo = datos.modulos()
     precios = datos.precios()
     giro = (propuesta.giro or "").lower()
+    contratados = set(datos.contratados_actual.get())
     del_giro = {mid for mid, m in catalogo.items()
-                if m["tipo"] != "base" and any(g != "todos" and (g in giro or giro in g) for g in m["giros"])}
+                if m["tipo"] != "base" and mid not in contratados
+                and any(g != "todos" and (g in giro or giro in g) for g in m["giros"])}
 
     if preguntas_hechas == 0:
         for d in propuesta.descartados:

@@ -24,10 +24,12 @@ def _carpeta():
 
 
 def lineas_de(modulos: list[str]) -> list[dict]:
-    """Base + módulos + dependencias, con precios del CSV."""
+    """Base + módulos + dependencias, con precios del CSV, sin lo que el negocio ya tiene contratado."""
     finales, _, _ = cerrar_dependencias(config.MODULOS_BASE + modulos)
+    contratados = set(datos.contratados_actual.get())
     precios = datos.precios()
-    return [{"id": m, "nombre": precios[m]["nombre"], "precio": precios[m]["precio"]} for m in finales]
+    return [{"id": m, "nombre": precios[m]["nombre"], "precio": precios[m]["precio"]}
+            for m in finales if m not in contratados]
 
 
 class ArgsGenerarConfiguracion(BaseModel):
@@ -38,7 +40,9 @@ class ArgsGenerarConfiguracion(BaseModel):
 
 def generar_configuracion(args: ArgsGenerarConfiguracion) -> dict:
     catalogo = datos.modulos()
-    finales, _, no_existen = cerrar_dependencias(config.MODULOS_BASE + args.modulos)
+    # El sitio muestra todo lo que tendrá el negocio: lo ya contratado más lo nuevo.
+    finales, _, no_existen = cerrar_dependencias(config.MODULOS_BASE + list(datos.contratados_actual.get())
+                                                 + args.modulos)
     if no_existen:
         return {"error": f"Módulos inexistentes: {no_existen}"}
     configuracion = {"negocio": args.nombre_negocio, "giro": args.giro,

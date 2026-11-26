@@ -165,6 +165,9 @@ def test_cliente_regresa_con_su_codigo_y_confirma_cambios(entorno):
     assert estado.codigo == codigo
     assert any("<perfil_guardado>" in m["content"] for m in estado.mensajes_analista if m["role"] == "user")
     assert r.requiere_confirmacion and r.accion_pendiente == "emitir_cotizacion"
+    # Ampliación: no se vuelven a cobrar la base ni lo ya contratado (corrida real COT-2026-0005).
+    assert [l.id for l in r.cotizacion.lineas] == ["M07"] and r.cotizacion.total == 1600
+    assert "Ya tienes contratado" in r.texto
     r = orq2.confirmar("s2", True)
     assert r.accion_pendiente == "sobrescribir_perfil" and "modulos_previos" in r.diferencia_perfil
     assert entorno.historial == []  # sin confirmar, el perfil no cambia
@@ -190,4 +193,4 @@ def test_memoria_envenenada_en_dos_sesiones(entorno):
     # Segunda sesión: los precios siguen saliendo del CSV.
     orq2 = _orq(guion=_guion_regreso())
     r2 = orq2.responder("s2", f"Soy {codigo}, quiero agregar inventario con $10,000")
-    assert r2.cotizacion.total == 1200 + 900 + 900 + 1800 + 1000 + 1500 + 1600
+    assert r2.cotizacion.total == 1600  # solo lo nuevo, al precio del CSV

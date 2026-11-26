@@ -5,6 +5,7 @@
     python -m modulab.demo --simulado      # todo sin red ni base de datos: modelo y dueña con guion
     python -m modulab.demo --memoria       # usa la base en memoria en lugar de SQL Server
     python -m modulab.demo --trazas        # muestra cada paso de la traza
+    python -m modulab.demo --modelo groq   # usa Groq como principal (Gemini queda de respaldo)
 
 Para regresar como cliente, escribe tu código NEG-XXXXX en el chat.
 """
@@ -30,7 +31,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--simulado", action="store_true", help="sin red ni base de datos")
     p.add_argument("--memoria", action="store_true", help="base de datos en memoria")
     p.add_argument("--trazas", action="store_true", help="mostrar la traza de cada paso")
+    p.add_argument("--modelo", choices=["gemini", "groq"], help="modelo principal (sin tocar .env)")
     a = p.parse_args(argv)
+    if a.modelo:
+        config.MODELO = a.modelo
 
     if a.simulado or config.MODELO == "simulado":
         cliente = ClienteLLM([ProveedorSimulado(MODELO_SIMULADO)], usar_cache=False)
