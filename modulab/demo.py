@@ -44,8 +44,9 @@ def main(argv: list[str] | None = None) -> int:
     if a.memoria:
         db.usar(db.RepositorioMemoria())
     orq = Orquestador(cliente, ProveedorConfirmacion("ui"), trazas_en_consola=a.trazas)
-    print(f"ModuLab · asistente para armar tu plataforma web (base: {'memoria' if a.memoria else 'SQL Server'}). "
-          "Escribe 'salir' para terminar.\n")
+    modelo = "simulado" if a.simulado else config.MODELO
+    print(f"ModuLab · asistente para armar tu plataforma web (modelo: {modelo}, "
+          f"base: {'memoria' if a.memoria else 'SQL Server'}). Escribe 'salir' para terminar.\n")
 
     respuestas = iter(DUENO) if a.guion else None
     while True:

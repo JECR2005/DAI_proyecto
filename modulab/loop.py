@@ -76,6 +76,9 @@ def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas
         resultado.pasos = paso
         try:
             r = cliente.chat(system, mensajes, especificaciones, agente=agente)
+            if getattr(cliente, "respaldo", None):  # el principal falló y respondió el de respaldo
+                trazador.registrar(agente=agente, paso=paso, modelo=r.modelo,
+                                   error="se usó el modelo de respaldo: " + " | ".join(cliente.respaldo)[:300])
         except ErrorLLM as e:
             trazador.registrar(agente=agente, paso=paso, error=str(e))
             resultado.error = str(e)

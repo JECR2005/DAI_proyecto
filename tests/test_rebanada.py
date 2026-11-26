@@ -223,3 +223,28 @@ def test_fuera_de_presupuesto_debe_no_caber_de_verdad():
     # Después de preguntar, descartar un módulo del giro que el dueño no quiere sí se permite.
     ok = Propuesta.model_validate({**base, "descartados": [{"id": "M08", "motivo": "El dueño dijo que no lo necesita"}]})
     assert revisar_coherencia(ok, preguntas_hechas=1) == []
+
+
+def test_el_respaldo_y_la_cache_quedan_en_la_traza(tmp_path, monkeypatch):
+    """Corrida real del 26-nov: con --modelo groq respondió Gemini y la traza no decía por qué."""
+    from modulab import config
+    from modulab.llm import ClienteLLM, ErrorLLM, RespuestaLLM
+    from modulab.loop import ejecutar_agente
+    from modulab.tracing import Trazador
+
+    class Falla:
+        nombre, modelo = "groq", "x"
+        def chat(self, *a): raise ErrorLLM("401 llave inválida", reintentable=False)
+
+    class Responde:
+        nombre, modelo = "gemini", "y"
+        def chat(self, *a): return RespuestaLLM(texto="hola", llamadas=[], modelo="gemini:y")
+
+    monkeypatch.setattr(config, "CACHE_DIR", tmp_path / "cache")
+    cliente = ClienteLLM([Falla(), Responde()], usar_cache=True)
+    tr = Trazador(carpeta=tmp_path)
+    ejecutar_agente("analista", "s", [{"role": "user", "content": "hola"}], [], cliente, tr, 1)
+    assert any(t.error and "respaldo" in t.error and "401" in t.error for t in tr.registros)
+    # segunda vez: Groq vuelve a fallar y la respuesta de Gemini sale de la caché, marcada como tal
+    ejecutar_agente("analista", "s", [{"role": "user", "content": "hola"}], [], cliente, tr, 1)
+    assert any("(caché)" in (t.modelo or "") for t in tr.registros)
