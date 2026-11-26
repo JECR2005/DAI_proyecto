@@ -23,6 +23,7 @@ python sql/crear_base.py --reset-test     # crea modulab y modulab_test, el usua
 ## Correr la rebanada vertical
 
 ```bash
+streamlit run app.py                         # interfaz web: chat, maqueta y botón Confirmar
 python -m modulab.demo --simulado --trazas   # sin red: verifica que el flujo completo funciona
 python -m modulab.demo --guion --trazas      # caso de la estética con Gemini (respuestas de la dueña automáticas)
 python -m modulab.demo                       # tú escribes como dueño
@@ -41,7 +42,8 @@ Salidas en `outputs/<sesión>/` (config.json, maqueta.html, cotización borrador
 | Confirmación por token, `emitir_cotizacion` con folio y vigencia | Jesús | Listo |
 | Perfil con código NEG, cliente que regresa, sobrescritura confirmada | Jesús | Listo |
 | Guardrails (inyección, precios, memoria, propósito) | Jesús | Listo |
-| `buscar_catalogo`, catálogo, precios, maqueta, PDF, `app.py` | Gustavo | Provisionales funcionales: reemplazar sin cambiar firmas |
+| `app.py` (Streamlit) | Gustavo | Versión funcional inicial de Jesús; Gustavo la rediseña conservando `responder`/`confirmar` |
+| `buscar_catalogo`, catálogo, precios, maqueta, PDF | Gustavo | Provisionales funcionales: reemplazar sin cambiar firmas |
 | `validator.py` V1–V9, `tracing.py`, casos y evaluación | Carlos | Provisionales: completar |
 
 ### Para `app.py` (Gustavo)
