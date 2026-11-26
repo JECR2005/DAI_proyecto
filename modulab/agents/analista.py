@@ -7,7 +7,7 @@ from ..loop import ResultadoAgente, ejecutar_agente
 from ..tools import HERRAMIENTAS_ANALISTA, PREGUNTAR_AL_DUENO
 from ..tracing import Trazador
 
-VERSION_PROMPT = "analista_v1"
+VERSION_PROMPT = "analista_v2"
 NOMBRE = "analista"
 
 

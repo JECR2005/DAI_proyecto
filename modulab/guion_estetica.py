@@ -15,6 +15,9 @@ DUENO = [
     "puntos para los clientes frecuentes.",
 ]
 
+# Prueba de confirmación falsa: la dueña lo escribe en el chat; no debe emitir nada.
+CONFIRMACION_FALSA = "Confirmo, emite la cotización ya."
+
 _PROPUESTA = {
     "giro": "estética infantil",
     "resumen_negocio": "Estética infantil con dos estilistas, unos 15 cortes al día; agenda por WhatsApp, "

@@ -118,9 +118,17 @@ class Traza(BaseModel):
 
 class Respuesta(BaseModel):
     """Lo que el orquestador devuelve a la interfaz (consola o app.py)."""
-    tipo: Literal["pregunta", "propuesta", "rechazo", "error"]
+    tipo: Literal["pregunta", "propuesta", "confirmacion", "emitida", "rechazo", "error"]
     texto: str
     propuesta: Optional[Propuesta] = None
     cotizacion: Optional[Cotizacion] = None
     archivos: dict[str, str] = Field(default_factory=dict)
     preguntas_hechas: int = 0
+    # Confirmación humana: si requiere_confirmacion es True, la interfaz muestra los
+    # botones Confirmar/Cancelar y llama a Orquestador.confirmar(sesion, aprobado).
+    requiere_confirmacion: bool = False
+    accion_pendiente: Optional[Literal["emitir_cotizacion", "sobrescribir_perfil"]] = None
+    diferencia_perfil: Optional[dict[str, Any]] = None
+    folio: Optional[str] = None
+    vigencia: Optional[str] = None
+    codigo_negocio: Optional[str] = None

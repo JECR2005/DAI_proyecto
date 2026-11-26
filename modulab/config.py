@@ -50,7 +50,9 @@ OUTPUTS_DIR = RAIZ / "outputs"
 TRAZAS_DIR = OUTPUTS_DIR / "trazas"
 CACHE_DIR = RAIZ / ".cache_llm"
 
-# --- SQL Server (se usa desde el jue 26) -----------------------------------
+# --- Base de datos -----------------------------------------------------------
+# MODULAB_DB: "sqlserver" (real) o "memoria" (pruebas y demo simulada).
+BASE_DATOS = _env("MODULAB_DB", "sqlserver")
 DB_SERVER = _env("MODULAB_DB_SERVER", "localhost")
 DB_NAME = _env("MODULAB_DB_NAME", "modulab")
 DB_USER = _env("MODULAB_DB_USER")

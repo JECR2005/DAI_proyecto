@@ -1,13 +1,14 @@
 """registrar_solicitud_especial: necesidades que no existen en el catálogo.
 
-En memoria para la rebanada; el vie 27 se guarda en SQL Server
-(tabla solicitudes_especiales). Nunca lleva precio.
+Se guardan en SQL Server (tabla solicitudes_especiales) para que el
+desarrollador las cotice aparte. Nunca llevan precio.
 """
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-SOLICITUDES: list[dict] = []
+from .. import db
+from . import datos
 
 
 class ArgsSolicitudEspecial(BaseModel):
@@ -16,7 +17,8 @@ class ArgsSolicitudEspecial(BaseModel):
 
 
 def registrar_solicitud_especial(args: ArgsSolicitudEspecial) -> dict:
-    folio = f"SOL-{len(SOLICITUDES) + 1:04d}"
-    SOLICITUDES.append({"id": folio, **args.model_dump()})
-    return {"id": folio, "registrada": True,
+    numero = db.repositorio().registrar_solicitud(
+        descripcion=args.descripcion, giro=args.giro,
+        sesion=datos.sesion_actual.get(), codigo_negocio=datos.codigo_actual.get())
+    return {"id": f"SOL-{numero:04d}", "registrada": True,
             "nota": "No existe en el catálogo: no tiene precio; el desarrollador la cotiza aparte."}

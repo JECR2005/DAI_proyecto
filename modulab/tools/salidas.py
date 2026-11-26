@@ -72,3 +72,48 @@ def generar_cotizacion_pdf(args: ArgsGenerarCotizacionPdf) -> dict:
     ruta.write_text("\n".join(texto), encoding="utf-8")
     return {"archivo": str(ruta), "total_mxn": total, "lineas": len(lineas),
             "nota": "Borrador sin folio. Emitir requiere confirmación humana."}
+
+
+def generar_documento_oficial(lineas: list[dict], folio: str, fecha: str, vigencia: str) -> str:
+    """Cotización oficial con folio y vigencia (PDF con ReportLab; texto si no está instalado).
+
+    STUB de Gustavo: él la reemplaza por el diseño final del PDF sin cambiar la firma.
+    """
+    carpeta = _carpeta()
+    total = sum(l["precio"] for l in lineas)
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
+    except ImportError:
+        ruta = carpeta / f"{folio}.txt"
+        texto = [f"COTIZACIÓN {folio}", f"Fecha: {fecha[:10]}   Vigencia: hasta {vigencia}", ""]
+        texto += [f"{l['id']}  {l['nombre']:<34} ${l['precio']:>9,.2f}" for l in lineas]
+        texto += ["", f"{'TOTAL':<39} ${total:>9,.2f}"]
+        ruta.write_text("\n".join(texto), encoding="utf-8")
+        return str(ruta)
+    ruta = carpeta / f"{folio}.pdf"
+    c = canvas.Canvas(str(ruta), pagesize=letter)
+    _, alto = letter
+    y = alto - 72
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(72, y, f"Cotización {folio}")
+    c.setFont("Helvetica", 10)
+    y -= 20
+    c.drawString(72, y, f"Fecha: {fecha[:10]}    Vigente hasta: {vigencia}")
+    y -= 30
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(72, y, "Módulo")
+    c.drawRightString(540, y, "Precio (MXN)")
+    c.setFont("Helvetica", 10)
+    for l in lineas:
+        y -= 16
+        c.drawString(72, y, f"{l['id']}  {l['nombre']}")
+        c.drawRightString(540, y, f"${l['precio']:,.2f}")
+    y -= 24
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(72, y, "Total")
+    c.drawRightString(540, y, f"${total:,.2f}")
+    c.setFont("Helvetica", 8)
+    c.drawString(72, 60, "Cotización emitida por ModuLab. Precios de la lista oficial del desarrollador.")
+    c.save()
+    return str(ruta)

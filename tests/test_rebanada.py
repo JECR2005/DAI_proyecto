@@ -4,14 +4,13 @@ import json
 import pytest
 from pydantic import BaseModel
 
-from modulab import config
+from modulab import config, db
 from modulab.guion_estetica import DUENO, MODELO_SIMULADO, SECUENCIA_ESPERADA
 from modulab.llm import ClienteLLM, ProveedorSimulado, _esquema_gemini
 from modulab.loop import Herramienta, ejecutar_agente, esquema_plano
 from modulab.orchestrator import Orquestador
 from modulab.schemas import Propuesta
 from modulab.tools import catalogo as cat
-from modulab.tools import solicitudes
 from modulab.tracing import Trazador
 
 
@@ -19,7 +18,7 @@ from modulab.tracing import Trazador
 def salidas_temporales(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "OUTPUTS_DIR", tmp_path / "outputs")
     monkeypatch.setattr(config, "TRAZAS_DIR", tmp_path / "outputs" / "trazas")
-    solicitudes.SOLICITUDES.clear()
+    db.usar(db.RepositorioMemoria())
 
 
 def _orquestador(guion=MODELO_SIMULADO):
@@ -35,11 +34,13 @@ def test_caso_estetica_de_punta_a_punta(tmp_path):
 
     assert (r1.tipo, r2.tipo) == ("pregunta", "pregunta")
     assert r3.tipo == "propuesta" and r3.preguntas_hechas == 2
+    assert r3.requiere_confirmacion and r3.accion_pendiente == "emitir_cotizacion"
     assert {m.id for m in r3.propuesta.modulos} == {"M04", "M05", "M06"}
     assert [l.id for l in r3.cotizacion.lineas] == ["M01", "M02", "M03", "M04", "M05", "M06"]
     assert r3.cotizacion.total == 7300 and not r3.cotizacion.excede_presupuesto
     assert [l.id for l in r3.cotizacion.fuera_presupuesto] == ["M07"]
-    assert solicitudes.SOLICITUDES[0]["descripcion"].startswith("Programa de puntos")
+    assert db.repositorio().solicitudes[0]["descripcion"].startswith("Programa de puntos")
+    assert db.repositorio().cotizaciones() == []  # nada emitido sin confirmar
     for ruta in r3.archivos.values():
         assert (tmp_path / "outputs").exists() and ruta and open(ruta, encoding="utf-8").read()
     assert orq.sesiones["s1"].trazador.herramientas_usadas == SECUENCIA_ESPERADA
