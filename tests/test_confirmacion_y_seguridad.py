@@ -176,6 +176,22 @@ def test_cliente_regresa_con_su_codigo_y_confirma_cambios(entorno):
     assert [c["codigo_negocio"] for c in entorno.cotizaciones()] == [codigo, codigo]
 
 
+def test_cliente_regresa_y_el_agente_pregunta_primero(entorno):
+    # Corrida real del 26-nov: el analista solo preguntó y no se le dijo qué ya tenía contratado.
+    orq = _orq()
+    _hasta_propuesta(orq)
+    codigo = orq.confirmar("s", True).codigo_negocio
+    pregunta = {"analista": [{"llamadas": [{"nombre": "preguntar_al_dueno",
+                                            "args": {"pregunta": "¿Qué te gustaría agregar?"}}]}],
+                "cotizador": []}
+    r = _orq(guion=pregunta).responder("s2", f"Hola, soy {codigo}, quiero agregar otra cosa")
+    assert r.tipo == "pregunta"
+    assert r.texto.startswith("Qué gusto verte de nuevo")
+    for nombre in ("Citas", "Recordatorios", "Expediente"):
+        assert nombre.lower() in r.texto.lower()
+    assert r.texto.endswith("¿Qué te gustaría agregar?")
+
+
 def test_tres_codigos_falsos_pausan_la_busqueda(entorno):
     orq = _orq(guion={"analista": [], "cotizador": []})
     textos = [orq.responder("s", f"mi código es NEG-AAAA{i}").texto for i in range(3)]

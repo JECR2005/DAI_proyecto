@@ -111,10 +111,16 @@ class Orquestador:
             return Respuesta(tipo="propuesta", texto="La cotización quedó como borrador. Para otra propuesta "
                              "inicia una sesión nueva.")
 
+        tenia_perfil = estado.perfil_previo is not None
         aviso = self._cargar_codigo(estado, texto)
         if aviso:
             return aviso
+        r = self._entrevistar(estado, texto)
+        if not tenia_perfil and estado.perfil_previo is not None and "Ya tienes contratado" not in r.texto:
+            r.texto = self._bienvenida(estado) + "\n\n" + r.texto  # lo dice el código, no el modelo
+        return r
 
+    def _entrevistar(self, estado: EstadoSesion, texto: str) -> Respuesta:
         estado.mensajes_analista.append({"role": "user", "content": guardrails.delimitar(texto)})
         propuesta = None
         for intento in range(config.MAX_REINTENTOS_VALIDADOR + 1):
@@ -294,6 +300,12 @@ class Orquestador:
             datos.codigo_actual.reset(marcas[2])
             datos.sesion_actual.reset(marcas[1])
             datos.carpeta_sesion.reset(marcas[0])
+
+    def _bienvenida(self, estado: EstadoSesion) -> str:
+        catalogo = datos.modulos()
+        nombres = [catalogo[m]["nombre"] for m in self._contratados(estado) if m in catalogo]
+        return (f"Qué gusto verte de nuevo ({estado.codigo}). Ya tienes contratado: " + ", ".join(nombres)
+                + ". Solo te propondré módulos nuevos.")
 
     @staticmethod
     def _contratados(estado: EstadoSesion) -> tuple:
