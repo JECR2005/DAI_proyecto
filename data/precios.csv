@@ -1,0 +1,13 @@
+id,nombre,precio_mxn,nota
+M01,Registro de ventas,1200,sintetico
+M02,Cotizaciones,900,sintetico
+M03,Servicio al cliente,900,sintetico
+M04,Citas,1800,sintetico
+M05,Recordatorios,1000,sintetico
+M06,Expediente de clientes,1500,sintetico
+M07,Inventario,1600,sintetico
+M08,Catalogo de productos en linea,1500,sintetico
+M09,Pedidos en linea,2000,sintetico
+M10,Reservas de mesa,1400,sintetico
+M11,Altas y bajas de alumnos,1600,sintetico
+M12,Control de pagos o colegiaturas,1800,sintetico
