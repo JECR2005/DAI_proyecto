@@ -23,7 +23,7 @@ def _env(nombre: str, defecto: str = "") -> str:
 MODELO = _env("MODELO", "gemini")
 # Verifiquen el nombre exacto disponible en su cuenta antes de usarlo.
 GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-3.5-flash-lite")
-GROQ_MODEL = _env("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = _env("GROQ_MODEL", "openai/gpt-oss-120b")
 GEMINI_API_KEY = _env("GEMINI_API_KEY")
 GROQ_API_KEY = _env("GROQ_API_KEY")
 TEMPERATURA = 0.0

@@ -14,3 +14,7 @@
 - Cliente nuevo: el perfil se crea justo antes de emitir, para ligar la cotización a su código NEG.
 - Guardrails con expresiones regulares antes del modelo; "guarda mis datos para la próxima vez" se permite, guardar instrucciones no.
 - Descartada: analista v1 (ver CHANGELOG de prompts).
+
+## 26-nov · Groq: cambio de modelo de respaldo
+- `llama-3.3-70b-versatile` se dio de baja en Groq (16-ago-2026) y respondía 404. La traza lo mostró
+  gracias al registro del respaldo. Se usa `openai/gpt-oss-120b`, el reemplazo que recomienda Groq.
