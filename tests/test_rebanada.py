@@ -210,3 +210,16 @@ def test_la_correccion_vuelve_al_analista_y_este_pregunta():
     orq = _orquestador(guion)
     r = orq.responder("s", DUENO[0])
     assert r.tipo == "pregunta" and "preferencias" in r.texto
+
+
+def test_fuera_de_presupuesto_debe_no_caber_de_verdad():
+    from modulab.agents.analista import revisar_coherencia
+    base = MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]
+    # Corrida real del 26 nov: solo Citas ($4,800 de $8,000) y todo lo demás "fuera por presupuesto".
+    sobrecorregida = Propuesta.model_validate({**base, "modulos": [base["modulos"][1]], "descartados": [],
+        "fuera_presupuesto": [{"id": m, "motivo": "después"} for m in ["M05", "M06", "M07", "M08"]]})
+    errores = revisar_coherencia(sobrecorregida, preguntas_hechas=1)
+    assert sum("sí cabe" in e for e in errores) == 4
+    # Después de preguntar, descartar un módulo del giro que el dueño no quiere sí se permite.
+    ok = Propuesta.model_validate({**base, "descartados": [{"id": "M08", "motivo": "El dueño dijo que no lo necesita"}]})
+    assert revisar_coherencia(ok, preguntas_hechas=1) == []

@@ -28,9 +28,12 @@ class Trazador:
         with self.archivo.open("a", encoding="utf-8") as f:
             f.write(traza.model_dump_json() + "\n")
         if self.en_consola:
-            detalle = traza.herramienta or "respuesta"
-            print(f"   [traza] {traza.agente} paso {traza.paso}: {detalle}"
-                  + (f" (error: {traza.error})" if traza.error else ""))
+            if traza.agente == "validador":
+                print(f"   [traza] validador: propuesta regresada para corregir -> {traza.error}")
+            else:
+                detalle = traza.herramienta or traza.razonamiento or "respuesta"
+                print(f"   [traza] {traza.agente} paso {traza.paso}: {detalle}"
+                      + (f" (error: {traza.error})" if traza.error else ""))
         return traza
 
     @property
