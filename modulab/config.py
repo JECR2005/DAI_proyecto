@@ -51,7 +51,7 @@ TRAZAS_DIR = OUTPUTS_DIR / "trazas"
 CACHE_DIR = RAIZ / ".cache_llm"
 
 # --- SQL Server (se usa desde el jue 26) -----------------------------------
-DB_SERVER = _env("MODULAB_DB_SERVER", r"localhost\SQLEXPRESS")
+DB_SERVER = _env("MODULAB_DB_SERVER", "localhost")
 DB_NAME = _env("MODULAB_DB_NAME", "modulab")
 DB_USER = _env("MODULAB_DB_USER")
 DB_PASSWORD = _env("MODULAB_DB_PASSWORD")

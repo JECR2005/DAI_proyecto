@@ -84,7 +84,8 @@ def test_buscar_catalogo_encuentra_citas_para_estetica():
 
 def test_buscar_catalogo_no_inventa_programa_de_puntos():
     r = cat.buscar_catalogo(cat.ArgsBuscarCatalogo(consulta="programa de puntos clientes frecuentes"))
-    assert r["resultados"] == []
+    # Ninguna ficha de módulo cubre esa necesidad; solo puede aparecer un caso que diga que no existe.
+    assert not [x for x in r["resultados"] if x["doc_id"].startswith("FICHA-")]
 
 
 def test_consultar_precios_reporta_inexistentes():
