@@ -134,14 +134,19 @@ class Orquestador:
                 estado.preguntas += 1
                 return Respuesta(tipo="pregunta", texto=r.texto or "")
             propuesta = r.args
-            errores = validator.validar_propuesta(propuesta)
+            duros = validator.validar_propuesta(propuesta)                       # bloquean la entrega
+            blandos = analista.revisar_coherencia(propuesta, estado.preguntas)   # calidad de la entrevista
+            errores = duros + blandos
             if not errores:
                 break
             estado.trazador.registrar(agente="validador", paso=intento + 1, error="; ".join(errores))
             if intento == config.MAX_REINTENTOS_VALIDADOR:
-                return Respuesta(tipo="error", texto="La propuesta no pasó la validación: " + "; ".join(errores))
+                if duros:
+                    return Respuesta(tipo="error", texto="La propuesta no pasó la validación: " + "; ".join(duros))
+                break  # solo quedan observaciones de calidad: se entrega y queda en la traza
             estado.mensajes_analista.append({"role": "user", "content":
-                "[validador] Tu propuesta tiene errores, corrígela y vuelve a entregarla: " + "; ".join(errores)})
+                "[validador] Tu propuesta no se puede entregar así; corrígela (o haz la pregunta que se indica): "
+                + " ".join(errores)})
 
         estado.propuesta = propuesta
         return self._cotizar(estado, propuesta)

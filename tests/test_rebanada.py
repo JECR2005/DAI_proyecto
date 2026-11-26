@@ -185,3 +185,28 @@ def test_si_todos_fallan_se_reporta_el_motivo():
     cliente = ClienteLLM([_Falla()], usar_cache=False)
     with pytest.raises(ErrorLLM, match="404"):
         cliente.chat("sistema", [{"role": "user", "content": "hola"}], [])
+
+
+# ------------------------------------------------------------------ coherencia del analista
+def test_no_se_descarta_un_modulo_del_giro_y_se_obliga_a_preguntar():
+    from modulab.agents.analista import revisar_coherencia
+    p = Propuesta.model_validate(MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"])
+    assert revisar_coherencia(p, preguntas_hechas=2) == []
+    malo = Propuesta.model_validate({**p.model_dump(), "descartados": [{"id": "M06", "motivo": "Historial por cliente"}]})
+    errores = revisar_coherencia(malo, preguntas_hechas=0)
+    assert any("M06" in e for e in errores) and any("pregúntale" in e for e in errores)
+
+
+def test_la_correccion_vuelve_al_analista_y_este_pregunta():
+    import copy as _copy
+    guion = _copy.deepcopy(MODELO_SIMULADO)
+    mala = _copy.deepcopy(guion["analista"][-1]["llamadas"][0]["args"])
+    mala["descartados"].append({"id": "M06", "motivo": "Historial por cliente"})
+    guion["analista"] = [
+        {"llamadas": [{"nombre": "buscar_catalogo", "args": {"consulta": "estética infantil"}}]},
+        {"llamadas": [{"nombre": "entregar_propuesta", "args": mala}]},
+        {"llamadas": [{"nombre": "preguntar_al_dueno", "args": {"pregunta": "¿Qué te importa más: guardar las "
+                                                                "preferencias de cada niño o controlar tus productos?"}}]}]
+    orq = _orquestador(guion)
+    r = orq.responder("s", DUENO[0])
+    assert r.tipo == "pregunta" and "preferencias" in r.texto
