@@ -225,6 +225,18 @@ def test_fuera_de_presupuesto_debe_no_caber_de_verdad():
     assert revisar_coherencia(ok, preguntas_hechas=1) == []
 
 
+def test_la_propuesta_no_se_pasa_del_presupuesto():
+    from modulab.agents.analista import revisar_coherencia
+    base = MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]
+    # Corrida real COT-2026-0007: Citas, Recordatorios, Expediente e Inventario = $8,900 de $8,000.
+    excedida = Propuesta.model_validate({**base, "fuera_presupuesto": [],
+        "modulos": base["modulos"] + [{"id": "M07", "motivo": "inventario", "doc_id": "FICHA-M07"}]})
+    errores = revisar_coherencia(excedida, preguntas_hechas=1)
+    assert any("te pasas por $900" in e for e in errores)
+    con_mas_dinero = Propuesta.model_validate({**excedida.model_dump(), "presupuesto": 9000})
+    assert revisar_coherencia(con_mas_dinero, preguntas_hechas=1) == []
+
+
 def test_el_respaldo_y_la_cache_quedan_en_la_traza(tmp_path, monkeypatch):
     """Corrida real del 26-nov: con --modelo groq respondió Gemini y la traza no decía por qué."""
     from modulab import config

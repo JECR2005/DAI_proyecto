@@ -28,6 +28,7 @@ def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
     2. Lo que va en fuera_presupuesto debe NO caber de verdad (si cabe, se incluye o se descarta
        con lo que dijo el dueño).
     3. Si deja módulos del giro fuera por presupuesto sin haber preguntado, debe preguntar primero.
+    4. El total no puede pasarse del presupuesto (corrida real COT-2026-0007: $8,900 de $8,000).
     No sustituye al validador V1–V9 de Carlos: revisa decisiones de la entrevista, no cálculos.
     """
     from ..tools import datos
@@ -54,6 +55,11 @@ def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
         incluidos = [m.id for m in propuesta.modulos]
         total = sum(l["precio"] for l in lineas_de(incluidos))
         sobra = propuesta.presupuesto - total
+        if sobra < 0:
+            errores.append(
+                f"Tu total es ${total:,.0f} y el presupuesto es ${propuesta.presupuesto:,.0f} (te pasas por "
+                f"${-sobra:,.0f}). Pasa a fuera_presupuesto lo que el dueño priorizó menos, sin quitar lo que eligió. "
+                "Si el dueño dijo que puede gastar más, actualiza el campo presupuesto con la cifra que dio.")
         for f in propuesta.fuera_presupuesto:
             if f.id in precios and f.id not in incluidos and precios[f.id]["precio"] <= sobra:
                 errores.append(
