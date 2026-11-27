@@ -48,3 +48,10 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
   desarrollo (`outputs/casos_dev/20261127_1423_gemini.json`). No cambian antes de la evaluación final de Carlos.
 - `tests/test_rebanada.py::test_prompts_congelados` falla si se modifican. Cambiarlos exige una versión nueva
   (v3), su entrada aquí y volver a correr los 6 casos.
+
+## 27-nov · rama `jesus/configurador`: Configurador como tercer agente
+- `cotizador_v2.md`: igual a v1 sin el paso de configuración (v1 queda congelado e intacto).
+- `configurador_v1.md`: nuevo. Adapta bienvenida, títulos, textos y orden de la maqueta al giro.
+  El código rechaza secciones de módulos que el sitio no tendrá y cualquier precio en los textos;
+  si el Configurador no entrega, se genera la maqueta genérica y queda en la traza.
+- Entra a `v1.0` solo si pasan las pruebas y los 6 casos de desarrollo con el modelo real.

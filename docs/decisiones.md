@@ -18,3 +18,9 @@
 ## 26-nov · Groq: cambio de modelo de respaldo
 - `llama-3.3-70b-versatile` se dio de baja en Groq (16-ago-2026) y respondía 404. La traza lo mostró
   gracias al registro del respaldo. Se usa `openai/gpt-oss-120b`, el reemplazo que recomienda Groq.
+
+## 27-nov · Configurador separado (nivel "esperado" de la ficha)
+- El Cotizador ya no genera la configuración: lo hace el Configurador, después de cotizar.
+- El Configurador solo cambia textos y orden; módulos y precios siguen en manos del código.
+- Si falla, maqueta genérica por código: el flujo de cotización nunca depende de él.
+- Descartado: que el Configurador decida módulos o diseño visual libre (riesgo de inventar funciones).

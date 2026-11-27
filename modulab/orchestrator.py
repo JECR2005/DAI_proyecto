@@ -7,7 +7,8 @@ Por cada mensaje del dueño:
    intentos fallidos por sesión) y se lo pasa al analista como datos.
 3. Analista de giro: pregunta (máx. 6) o entrega la propuesta; el validador
    la revisa y, si falla, el analista reintenta (máx. 2).
-4. Cotizador/Configurador: maqueta, configuración y borrador; precios del CSV.
+4. Cotizador: borrador de cotización; precios del CSV. Configurador: adapta la
+   configuración y la maqueta al giro (si falla, maqueta genérica por código).
 5. Acciones irreversibles (emitir cotización, sobrescribir perfil): solo con
    token del ProveedorConfirmacion. En la interfaz, el token lo crea el botón
    Confirmar a través de `Orquestador.confirmar(sesion, aprobado)`.
@@ -24,11 +25,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 from . import config, db, guardrails, validator
-from .agents import analista, cotizador
+from .agents import analista, configurador, cotizador
 from .confirmation import ProveedorConfirmacion, TokenInvalido
 from .llm import ClienteLLM
 from .schemas import Cotizacion, Perfil, Propuesta, Respuesta
 from .tools import datos
+from .tools.salidas import ArgsGenerarConfiguracion, generar_configuracion
 from .tools.emision import ArgsEmitirCotizacion, contenido_de, emitir_cotizacion
 from .tools.perfil import ArgsGuardarPerfil, guardar_perfil, sobrescribir_perfil_confirmado
 from .tracing import Trazador
@@ -183,11 +185,23 @@ class Orquestador:
             correcciones = "; ".join(errores)
 
         estado.cotizacion, estado.modulos = cot, list(r.args.modulos)
+        self._configurar(estado, propuesta)
         estado.archivos = self._archivos(estado.carpeta)
         estado.pendientes = [Accion("emitir_cotizacion", estado.modulos, contenido_de(estado.modulos))]
         base = Respuesta(tipo="propuesta", texto=formatear_resumen(propuesta, cot, self._contratados(estado)),
                          propuesta=propuesta, cotizacion=cot)
         return self._pedir_confirmacion(estado, base)
+
+    def _configurar(self, estado: EstadoSesion, propuesta: Propuesta) -> None:
+        """Configurador: adapta la maqueta al giro. Si no entrega, se genera la genérica por código."""
+        r = configurador.ejecutar(propuesta, estado.modulos, self.cliente, estado.trazador)
+        if r.terminal == "entregar_configuracion" and (estado.carpeta / "maqueta.html").exists():
+            return
+        motivo = r.error or ("tope de pasos" if r.agotado else "no entregó la configuración")
+        res = generar_configuracion(ArgsGenerarConfiguracion(modulos=estado.modulos, giro=propuesta.giro))
+        estado.trazador.registrar(agente="configurador", paso=0, herramienta="generar_configuracion",
+                                  args={"modulos": estado.modulos}, resultado=res,
+                                  error=f"se usó la maqueta genérica: {motivo}")
 
     # ------------------------------------------------------------------ confirmación y acciones
     def _pedir_confirmacion(self, estado: EstadoSesion, base: Respuesta) -> Respuesta:

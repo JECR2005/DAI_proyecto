@@ -17,7 +17,7 @@ from ..tools import datos
 from ..tools.salidas import lineas_de
 from ..tracing import Trazador
 
-VERSION_PROMPT = "cotizador_v1"
+VERSION_PROMPT = "cotizador_v2"
 NOMBRE = "cotizador"
 
 

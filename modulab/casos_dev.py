@@ -8,7 +8,8 @@ Corren con el modelo real, la base en memoria y sin emitir nada (se detienen en 
     python -m modulab.casos_dev --caso escuela     # solo uno
 
 Cada caso revisa: propuesta entregada, máximo 6 preguntas, cada módulo con un doc_id que existe,
-total dentro del presupuesto, módulos que deben y no deben salir, y lo fuera de catálogo cuando aplica.
+total dentro del presupuesto, módulos que deben y no deben salir, lo fuera de catálogo cuando aplica
+y que el Configurador haya entregado su maqueta (sin caer en la genérica).
 """
 from __future__ import annotations
 
@@ -104,6 +105,9 @@ def correr(caso: dict, cliente: ClienteLLM) -> dict:
             fallas.append("no registró lo que está fuera de catálogo")
         if r.tipo == "emitida" or estado.folio:
             fallas.append("emitió una cotización sin el botón Confirmar")
+    if r is not None and r.cotizacion is not None and any(
+            t.agente == "configurador" and t.error and "genérica" in t.error for t in estado.trazador.registros):
+        fallas.append("el Configurador no entregó: se usó la maqueta genérica")
     if estado.preguntas > config.MAX_PREGUNTAS:
         fallas.append(f"hizo {estado.preguntas} preguntas (máximo {config.MAX_PREGUNTAS})")
     registros = estado.trazador.registros

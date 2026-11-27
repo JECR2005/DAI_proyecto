@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 
 from pydantic import BaseModel, Field
 
@@ -32,10 +33,22 @@ def lineas_de(modulos: list[str]) -> list[dict]:
             for m in finales if m not in contratados]
 
 
+class SeccionConfig(BaseModel):
+    id: str = Field(description="Id del módulo (uno de los que tendrá el sitio)")
+    titulo: str = Field(max_length=60, description="Título de la sección en el lenguaje del negocio")
+    texto: str = Field(max_length=300, description="Una o dos frases para el cliente final, sin precios")
+
+
 class ArgsGenerarConfiguracion(BaseModel):
     modulos: list[str] = Field(description="Ids de los módulos adicionales elegidos (sin los 3 base)")
     giro: str = Field(description="Giro del negocio")
     nombre_negocio: str = Field(default="Mi negocio", description="Nombre de ejemplo para la maqueta")
+    bienvenida: str = Field(default="", max_length=300, description="Texto de bienvenida del sitio, sin precios")
+    secciones: list[SeccionConfig] = Field(
+        default_factory=list, description="Título y texto por módulo, en el orden en que deben aparecer")
+
+
+_PRECIO = re.compile(r"\$|\d[\d,.]*\s*(pesos|mxn)\b", re.IGNORECASE)
 
 
 def generar_configuracion(args: ArgsGenerarConfiguracion) -> dict:
@@ -45,19 +58,33 @@ def generar_configuracion(args: ArgsGenerarConfiguracion) -> dict:
                                                  + args.modulos)
     if no_existen:
         return {"error": f"Módulos inexistentes: {no_existen}"}
-    configuracion = {"negocio": args.nombre_negocio, "giro": args.giro,
-                     "modulos": [{"id": m, "nombre": catalogo[m]["nombre"], "activo": True} for m in finales]}
+    # El Configurador solo adapta textos y orden: no agrega módulos ni escribe precios.
+    ajenos = [s.id for s in args.secciones if s.id not in finales]
+    if ajenos:
+        return {"error": f"Secciones de módulos que el sitio no tendrá: {ajenos}. Usa solo {finales}."}
+    textos = [args.bienvenida] + [t for s in args.secciones for t in (s.titulo, s.texto)]
+    if any(_PRECIO.search(t) for t in textos):
+        return {"error": "Los textos no pueden incluir precios ni montos; el precio lo pone la cotización."}
+    propias = {s.id: s for s in args.secciones}
+    orden = [s.id for s in args.secciones] + [m for m in finales if m not in propias]
+    secciones_cfg = [{"id": m, "modulo": catalogo[m]["nombre"],
+                      "titulo": propias[m].titulo if m in propias else catalogo[m]["nombre"],
+                      "texto": propias[m].texto if m in propias else catalogo[m]["descripcion"],
+                      "activo": True} for m in orden]
+    configuracion = {"negocio": args.nombre_negocio, "giro": args.giro, "bienvenida": args.bienvenida,
+                     "modulos": secciones_cfg}
     carpeta = _carpeta()
     ruta_json = carpeta / "config.json"
     ruta_json.write_text(json.dumps(configuracion, ensure_ascii=False, indent=2), encoding="utf-8")
-    menu = "".join(f"<li>{html.escape(catalogo[m]['nombre'])}</li>" for m in finales)
+    menu = "".join(f"<li>{html.escape(s['titulo'])}</li>" for s in secciones_cfg)
+    bienvenida = f"<p>{html.escape(args.bienvenida)}</p>" if args.bienvenida else ""
     secciones = "".join(
-        f"<section><h2>{html.escape(catalogo[m]['nombre'])}</h2><p>{html.escape(catalogo[m]['descripcion'])}</p>"
-        f"<p><em>Datos de ejemplo.</em></p></section>" for m in finales)
+        f"<section><h2>{html.escape(s['titulo'])}</h2><p>{html.escape(s['texto'])}</p>"
+        f"<p><em>Datos de ejemplo.</em></p></section>" for s in secciones_cfg)
     ruta_html = carpeta / "maqueta.html"
     ruta_html.write_text(
         f"<!DOCTYPE html><html lang='es'><meta charset='utf-8'><title>{html.escape(args.nombre_negocio)}</title>"
-        f"<body><header><h1>{html.escape(args.nombre_negocio)}</h1><nav><ul>{menu}</ul></nav></header>"
+        f"<body><header><h1>{html.escape(args.nombre_negocio)}</h1>{bienvenida}<nav><ul>{menu}</ul></nav></header>"
         f"{secciones}<footer>Maqueta generada por ModuLab</footer></body></html>", encoding="utf-8")
     return {"config_json": str(ruta_json), "maqueta_html": str(ruta_html), "modulos_activos": finales}
 
