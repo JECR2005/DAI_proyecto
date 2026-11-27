@@ -50,9 +50,10 @@ CASOS = [
      "debe": ["M07", "M08"], "no_debe": ["M04", "M10", "M11"], "fuera_catalogo": False},
     {"id": "comida", "giro": "restaurante o venta de comida",
      "dueno": ["Tengo una fonda; los pedidos para llevar llegan por WhatsApp y los fines de semana la gente "
-               "quiere reservar mesa. Mi presupuesto es de $6,000.",
+               "quiere reservar mesa. También quisiera una app para repartidores, como las de las plataformas. "
+               "Mi presupuesto es de $6,000.",
                "Lo que más me urge son las reservas del fin de semana; los pedidos los puedo seguir por WhatsApp.",
-               "También quisiera una app para repartidores, como las de las plataformas."],
+               "No vendo productos empacados, solo comida del día."],
      "debe": ["M10"], "no_debe": ["M04", "M11", "M12"], "fuera_catalogo": True},
     {"id": "presupuesto_bajo", "giro": "estética infantil",
      "dueno": ["Tengo una estética infantil pequeña, solo yo atiendo. Agendo por WhatsApp. Solo tengo $4,000.",

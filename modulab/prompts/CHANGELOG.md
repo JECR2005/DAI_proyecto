@@ -33,3 +33,12 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
 - Tercera corrida: los 2 casos pasan, pero presupuesto bajo (`97e3cd523c35`) llegó a 6 preguntas porque 4 eran
   la propuesta escrita como texto. El analista ya no cierra su turno con texto suelto: pregunta con
   `preguntar_al_dueno` y entrega con `entregar_propuesta`, igual que el cotizador.
+
+## 27-nov · sin cambio de prompt; correcciones en código por los casos de desarrollo
+- Corrida del 26-nov 19:14: 4/6.
+  - presupuesto bajo (`106c9257c74a`): el modelo no contaba la base ($3,000) dentro del presupuesto y, atrapado
+    entre "no te pases" y "no quites lo que pidió", inventó un presupuesto de $4,800. Ahora el revisor dice cuánto
+    queda después de la base, permite dejar fuera lo que no cabe aunque se haya pedido, y rechaza un presupuesto
+    que el dueño no escribió.
+  - fonda (`a7f1a716f23e`): el agente cerró tras una pregunta y nunca oyó la app de repartidores, que venía en el
+    tercer mensaje del guion. Se corrigió el guion (la petición va en el primer mensaje), no el agente.

@@ -63,6 +63,7 @@ class EstadoSesion:
     vigencia: Optional[str] = None
     cancelada: bool = False
     recorte_consultado: bool = False  # ya se le preguntó al dueño qué dejar fuera
+    montos_dueno: set = field(default_factory=set)  # cantidades que escribió el dueño
 
 
 class Orquestador:
@@ -123,6 +124,7 @@ class Orquestador:
 
     def _entrevistar(self, estado: EstadoSesion, texto: str) -> Respuesta:
         estado.mensajes_analista.append({"role": "user", "content": guardrails.delimitar(texto)})
+        estado.montos_dueno |= analista.montos_en(texto)
         propuesta = None
         for intento in range(config.MAX_REINTENTOS_VALIDADOR + 1):
             puede_preguntar = estado.preguntas < config.MAX_PREGUNTAS
@@ -143,7 +145,10 @@ class Orquestador:
             propuesta = r.args
             duros = validator.validar_propuesta(propuesta)                       # bloquean la entrega
             preguntar = not estado.recorte_consultado and estado.preguntas < config.MAX_PREGUNTAS
-            blandos = analista.revisar_coherencia(propuesta, estado.preguntas, preguntar)  # calidad de la entrevista
+            montos = estado.montos_dueno | ({estado.perfil_previo.presupuesto}
+                                            if estado.perfil_previo and estado.perfil_previo.presupuesto else set())
+            blandos = analista.revisar_coherencia(propuesta, estado.preguntas, preguntar,  # calidad de la entrevista
+                                                  montos_dueno=montos)
             if preguntar and any("pregúntale al dueño (una sola pregunta, con el total" in e for e in blandos):
                 estado.recorte_consultado = True  # solo se le pide preguntar una vez por sesión
             errores = duros + blandos

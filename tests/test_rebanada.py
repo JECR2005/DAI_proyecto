@@ -142,7 +142,7 @@ def test_tope_de_preguntas(monkeypatch):
                                          "args": MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]}]}],
              "cotizador": MODELO_SIMULADO["cotizador"]}
     orq = _orquestador(guion)
-    assert orq.responder("s", "Tengo una estética").tipo == "pregunta"
+    assert orq.responder("s", "Tengo una estética; mi presupuesto es de $8,000").tipo == "pregunta"
     # Sin la herramienta de preguntar, el intento de preguntar de nuevo es rechazado y el agente entrega.
     assert orq.responder("s", "Sí").tipo == "propuesta"
 
@@ -337,3 +337,26 @@ def test_analista_que_escribe_la_propuesta_como_texto_debe_entregarla_con_su_her
     assert r.tipo == "pregunta" and "corte" in r.texto and orq.sesiones["s"].preguntas == 1  # el texto no contó
     r = orq.responder("s", DUENO[2])
     assert r.propuesta is not None and r.cotizacion.total == 7300
+
+
+# ------------------------------------------------------------------ casos de desarrollo del 27-nov
+def test_el_revisor_dice_cuanto_queda_despues_de_la_base():
+    """Caso presupuesto bajo (106c9257c74a): el modelo creía que con Citas ($1,800) de $4,000 'quedaban $2,200'."""
+    from modulab.agents.analista import revisar_coherencia
+    base = MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]
+    solo_citas = Propuesta.model_validate({**base, "presupuesto": 4000, "descartados": [], "fuera_presupuesto": [],
+        "modulos": [{"id": "M04", "motivo": "agenda", "doc_id": "FICHA-M04"}]})
+    errores = revisar_coherencia(solo_citas, 2)
+    assert any("La base ($3,000) siempre cuenta" in e and "quedan $1,000" in e for e in errores)
+
+
+def test_el_analista_no_inventa_presupuesto():
+    """Caso presupuesto bajo (106c9257c74a): subió el presupuesto a $4,800 sin que la dueña lo dijera."""
+    from modulab.agents.analista import montos_en, revisar_coherencia
+    assert montos_en("Solo tengo $4,000.") == {4000.0}
+    assert {8000.0, 15.0} <= montos_en("Atendemos 15 cortes; mi presupuesto es de 8 mil pesos")
+    base = MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]
+    inventada = Propuesta.model_validate({**base, "presupuesto": 9000})
+    errores = revisar_coherencia(inventada, 2, montos_dueno={8000.0, 15.0})
+    assert any("nunca dijo $9,000" in e for e in errores)
+    assert not any("nunca dijo" in e for e in revisar_coherencia(Propuesta.model_validate(base), 2, montos_dueno={8000.0}))
