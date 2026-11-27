@@ -124,6 +124,8 @@ def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas
                 _responder(mensajes, ll, {"omitida": "El turno ya se cerró con otra herramienta."})
                 continue
             h = registro.get(ll.nombre)
+            if h is not None and ofrecidas is not especificaciones and not h.terminal:
+                h = None  # en el último paso solo valen las de cierre, aunque el modelo llame otra
             if h is None:
                 salida = {"error": f"La herramienta '{ll.nombre}' no existe o no está disponible para ti."}
                 _responder(mensajes, ll, salida)

@@ -396,3 +396,32 @@ def test_en_el_ultimo_paso_el_agente_solo_puede_cerrar():
                         ClienteLLM([falso], usar_cache=False), Trazador(carpeta=config.OUTPUTS_DIR / "trazas_pruebas"), 8)
     assert r.terminal == "preguntar_al_dueno" and r.pasos == 8 and not r.agotado
     assert set(falso.ofrecidas[-1]) == {"preguntar_al_dueno", "entregar_propuesta"}
+
+
+def test_si_el_analista_agota_sus_pasos_tiene_una_vuelta_mas():
+    """Caso fonda (a3810526a3e4): en el paso 8 Gemini llamó una herramienta que no se le ofreció y el turno se agotó."""
+    busca = {"llamadas": [{"nombre": "buscar_catalogo", "args": {"consulta": "fonda"}}]}
+    pregunta = {"llamadas": [{"nombre": "preguntar_al_dueno", "args": {"pregunta": "¿Qué te urge más?"}}]}
+    guion = {"analista": [busca] * 8 + [pregunta], "cotizador": []}
+    orq = _orquestador(guion)
+    r = orq.responder("s", "Tengo una fonda; mi presupuesto es de $6,000")
+    assert r.tipo == "pregunta" and "urge" in r.texto
+    registros = orq.sesiones["s"].trazador.registros
+    assert any(t.error and "Tope de 8" in t.error for t in registros)
+
+
+def test_en_el_ultimo_paso_no_se_ejecuta_una_herramienta_no_ofrecida():
+    from modulab.llm import LlamadaHerramienta, RespuestaLLM
+    from modulab.loop import ejecutar_agente
+    from modulab.tools import HERRAMIENTAS_ANALISTA
+
+    class Desobediente:
+        nombre, modelo = "falso", "x"
+        def chat(self, system, mensajes, herramientas):
+            return RespuestaLLM(texto=None, modelo="falso", llamadas=[LlamadaHerramienta(
+                id="r", nombre="registrar_solicitud_especial", args={"descripcion": "app", "giro": "fonda"})])
+
+    tr = Trazador(carpeta=config.OUTPUTS_DIR / "trazas_pruebas")
+    r = ejecutar_agente("analista", "s", [{"role": "user", "content": "fonda"}], HERRAMIENTAS_ANALISTA,
+                        ClienteLLM([Desobediente()], usar_cache=False), tr, 1)
+    assert r.agotado and "registrar_solicitud_especial" not in r.herramientas

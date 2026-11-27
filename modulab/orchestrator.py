@@ -134,6 +134,11 @@ class Orquestador:
                 estado.mensajes_analista.append({"role": "user", "content":
                     "[orquestador] Ya hiciste el máximo de preguntas. Entrega la propuesta con lo que sabes."})
             r = analista.ejecutar(estado.mensajes_analista, self.cliente, estado.trazador, puede_preguntar)
+            if r.agotado and not r.error:  # una vuelta más (otros 8 pasos) para cerrar; caso fonda del 27-nov
+                estado.mensajes_analista.append({"role": "user", "content":
+                    "[orquestador] Te quedaste sin pasos. Ya tienes lo necesario: entrega la propuesta con "
+                    "entregar_propuesta o haz la única pregunta que te falta con preguntar_al_dueno."})
+                r = analista.ejecutar(estado.mensajes_analista, self.cliente, estado.trazador, puede_preguntar)
             if r.error:
                 return Respuesta(tipo="error", texto=f"No pude consultar el modelo: {r.error}")
             if r.agotado:

@@ -58,3 +58,6 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
 - Corrida 14:31 en la rama: 5/6. La fonda (`8bc7e3c80fc5`) necesitó 9 pasos y llegó al tope de 8 sin entregar
   (no era del Configurador; en la corrida anterior pasó de suerte). Se mantiene el tope de 8: en el último paso
   el agente solo recibe sus herramientas de cierre (preguntar o entregar), así el turno siempre termina.
+- Corrida 14:36: 5/6. Fonda (`a3810526a3e4`): en el paso 8 Gemini llamó una herramienta que no se le ofreció.
+  Ahora el bucle no la ejecuta, y si el analista agota sus 8 pasos el orquestador le da una sola vuelta más
+  (otros 8) con la instrucción de entregar o preguntar. Cada vuelta respeta el tope.
