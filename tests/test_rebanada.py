@@ -260,3 +260,16 @@ def test_el_respaldo_y_la_cache_quedan_en_la_traza(tmp_path, monkeypatch):
     # segunda vez: Groq vuelve a fallar y la respuesta de Gemini sale de la caché, marcada como tal
     ejecutar_agente("analista", "s", [{"role": "user", "content": "hola"}], [], cliente, tr, 1)
     assert any("(caché)" in (t.modelo or "") for t in tr.registros)
+
+
+def test_casos_dev_revisa_la_propuesta_sin_emitir():
+    from modulab.casos_dev import CASOS, correr
+    from modulab.llm import ClienteLLM, ProveedorSimulado
+    estetica = next(c for c in CASOS if c["id"] == "estetica")
+    res = correr(estetica, ClienteLLM([ProveedorSimulado(MODELO_SIMULADO)], usar_cache=False))
+    assert res["ok"], res["fallas"]
+    assert res["modulos"] == ["M01", "M02", "M03", "M04", "M05", "M06"] and res["total"] == 7300
+    # Si la propuesta se sale de lo esperado, el caso lo reporta como falla.
+    exigente = {**estetica, "debe": ["M07"], "no_debe": ["M06"]}
+    res = correr(exigente, ClienteLLM([ProveedorSimulado(MODELO_SIMULADO)], usar_cache=False))
+    assert not res["ok"] and any("M07" in f for f in res["fallas"]) and any("M06" in f for f in res["fallas"])

@@ -27,6 +27,7 @@ streamlit run app.py                         # interfaz web: chat, maqueta y bot
 python -m modulab.demo --simulado --trazas   # sin red: verifica que el flujo completo funciona
 python -m modulab.demo --guion --trazas      # caso de la estética con Gemini (respuestas de la dueña automáticas)
 python -m modulab.demo                       # tú escribes como dueño
+python -m modulab.casos_dev                   # 6 casos de desarrollo del analista (no emite nada)
 python -m modulab.demo --memoria             # sin SQL Server (base en memoria)
 python -m pytest -q                          # pruebas sin modelo (las de SQL Server se saltan si no hay base)
 ```
