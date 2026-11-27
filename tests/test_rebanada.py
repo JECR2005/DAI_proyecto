@@ -322,3 +322,18 @@ def test_si_se_pasa_del_presupuesto_pregunta_al_dueno_en_vez_de_recortar_solo():
     orq = _orquestador(guion)
     r = orq.responder("s", DUENO[0] + " " + DUENO[1])
     assert r.tipo == "pregunta" and orq.sesiones["s"].recorte_consultado
+
+
+def test_analista_que_escribe_la_propuesta_como_texto_debe_entregarla_con_su_herramienta():
+    """Caso presupuesto bajo (97e3cd523c35): 4 de sus 6 'preguntas' eran la propuesta escrita como texto."""
+    import copy as _copy
+    guion = _copy.deepcopy(MODELO_SIMULADO)
+    entrega = guion["analista"][-1]
+    pregunta = {"llamadas": [{"nombre": "preguntar_al_dueno", "args": {"pregunta": "¿Anotas qué corte le gusta?"}}]}
+    guion["analista"] = [{"texto": "Con tu presupuesto te propongo: Citas, Recordatorios y Expediente.", "llamadas": []},
+                         pregunta, entrega]
+    orq = _orquestador(guion)
+    r = orq.responder("s", DUENO[0] + " " + DUENO[1])
+    assert r.tipo == "pregunta" and "corte" in r.texto and orq.sesiones["s"].preguntas == 1  # el texto no contó
+    r = orq.responder("s", DUENO[2])
+    assert r.propuesta is not None and r.cotizacion.total == 7300

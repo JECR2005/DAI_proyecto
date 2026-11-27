@@ -18,7 +18,8 @@ def prompt() -> str:
 def ejecutar(mensajes: list[dict], cliente: ClienteLLM, trazador: Trazador,
              puede_preguntar: bool = True) -> ResultadoAgente:
     herramientas = [h for h in HERRAMIENTAS_ANALISTA if puede_preguntar or h is not PREGUNTAR_AL_DUENO]
-    return ejecutar_agente(NOMBRE, prompt(), mensajes, herramientas, cliente, trazador)
+    # Pregunta con preguntar_al_dueno y entrega con entregar_propuesta: el texto suelto no cierra el turno.
+    return ejecutar_agente(NOMBRE, prompt(), mensajes, herramientas, cliente, trazador, solo_herramientas=True)
 
 
 def revisar_coherencia(propuesta, preguntas_hechas: int, preguntar_recorte: bool = False) -> list[str]:

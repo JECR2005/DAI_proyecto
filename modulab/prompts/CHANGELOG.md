@@ -30,3 +30,6 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
 - Segunda corrida: 4/6. En estética y presupuesto bajo, al pasarse del presupuesto el analista recortó por su
   cuenta (quitó Recordatorios, que la dueña sí pidió) o entregó excedido. Ahora, la primera vez que se pasa,
   el orquestador le pide preguntarle a la dueña qué deja fuera o si puede gastar más (una vez por sesión).
+- Tercera corrida: los 2 casos pasan, pero presupuesto bajo (`97e3cd523c35`) llegó a 6 preguntas porque 4 eran
+  la propuesta escrita como texto. El analista ya no cierra su turno con texto suelto: pregunta con
+  `preguntar_al_dueno` y entrega con `entregar_propuesta`, igual que el cotizador.
