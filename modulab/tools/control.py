@@ -20,4 +20,8 @@ class ArgsEntregarCotizacion(BaseModel):
     resumen: str = Field(description="Resumen breve para el dueño, sin precios (los pone el sistema)")
 
 
+class ArgsEntregarConfiguracion(BaseModel):
+    resumen: str = Field(description="Qué adaptaste del sitio para este negocio, en una frase y sin precios")
+
+
 ArgsEntregarPropuesta = Propuesta

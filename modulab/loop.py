@@ -66,16 +66,32 @@ def esquema_plano(modelo: type[BaseModel]) -> dict:
 
 def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas: list[Herramienta],
                     cliente: ClienteLLM, trazador: Trazador,
-                    max_pasos: int = config.MAX_PASOS_POR_TURNO) -> ResultadoAgente:
-    """Corre un turno del agente. `mensajes` se modifica en su lugar (memoria del agente)."""
+                    max_pasos: int = config.MAX_PASOS_POR_TURNO,
+                    solo_herramientas: bool = False) -> ResultadoAgente:
+    """Corre un turno del agente. `mensajes` se modifica en su lugar (memoria del agente).
+
+    solo_herramientas: el agente siempre termina con una herramienta terminal (el cotizador); si
+    responde solo texto o vacío, se le pide cerrar en lugar de terminar el turno (caso del 26-nov).
+    """
     registro = {h.nombre: h for h in herramientas}
     especificaciones = [h.especificacion() for h in herramientas]
     resultado = ResultadoAgente()
 
+    cierres = [h.especificacion() for h in herramientas if h.terminal]
     for paso in range(1, max_pasos + 1):
         resultado.pasos = paso
+        ofrecidas = especificaciones
+        if paso == max_pasos and cierres:
+            # Último paso: solo herramientas de cierre, para que el turno termine en lugar de agotarse
+            # (caso fonda del 27-nov: necesitaba 9 pasos y llegó al tope de 8 sin entregar).
+            ofrecidas = cierres
+            mensajes.append({"role": "user", "content": "[orquestador] Es tu último paso de este turno: "
+                             "entrega tu resultado o haz la pregunta que te falta."})
         try:
-            r = cliente.chat(system, mensajes, especificaciones, agente=agente)
+            r = cliente.chat(system, mensajes, ofrecidas, agente=agente)
+            if getattr(cliente, "respaldo", None):  # el principal falló y respondió el de respaldo
+                trazador.registrar(agente=agente, paso=paso, modelo=r.modelo,
+                                   error="se usó el modelo de respaldo: " + " | ".join(cliente.respaldo)[:300])
         except ErrorLLM as e:
             trazador.registrar(agente=agente, paso=paso, error=str(e))
             resultado.error = str(e)
@@ -93,6 +109,11 @@ def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas
                        latencia_ms=r.latencia_ms)
 
         if not r.llamadas:
+            if solo_herramientas:
+                trazador.registrar(**comunes, error="respondió sin llamar herramientas; se le pide cerrar")
+                mensajes.append({"role": "user", "content": "[orquestador] No respondas con texto: termina "
+                                 "llamando a la herramienta que entrega tu resultado."})
+                continue
             trazador.registrar(**comunes)
             resultado.texto = r.texto
             return resultado
@@ -103,6 +124,8 @@ def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas
                 _responder(mensajes, ll, {"omitida": "El turno ya se cerró con otra herramienta."})
                 continue
             h = registro.get(ll.nombre)
+            if h is not None and ofrecidas is not especificaciones and not h.terminal:
+                h = None  # en el último paso solo valen las de cierre, aunque el modelo llame otra
             if h is None:
                 salida = {"error": f"La herramienta '{ll.nombre}' no existe o no está disponible para ti."}
                 _responder(mensajes, ll, salida)

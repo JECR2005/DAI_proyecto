@@ -1,7 +1,7 @@
 """Registro de herramientas: las 9 de la ficha + las terminales de control.
 
 Cada agente recibe solo su subconjunto (ver HERRAMIENTAS_ANALISTA y
-HERRAMIENTAS_COTIZADOR). La descripción es lo que lee el modelo: si la
+HERRAMIENTAS_COTIZADOR y HERRAMIENTAS_CONFIGURADOR). La descripción es lo que lee el modelo: si la
 cambias, anótalo en prompts/CHANGELOG.md como cualquier prompt.
 """
 from __future__ import annotations
@@ -43,7 +43,8 @@ REGISTRAR_SOLICITUD = Herramienta(
 
 GENERAR_CONFIGURACION = Herramienta(
     "generar_configuracion",
-    "Genera el config.json y la maqueta HTML del sitio con los módulos elegidos (los 3 base se agregan solos).",
+    "Genera el config.json y la maqueta HTML del sitio con los módulos elegidos (los 3 base se agregan solos). "
+    "Acepta una bienvenida y, por módulo, un título y un texto en el lenguaje del negocio, en el orden deseado.",
     salidas.ArgsGenerarConfiguracion, salidas.generar_configuracion)
 
 GENERAR_COTIZACION_PDF = Herramienta(
@@ -73,11 +74,17 @@ ENTREGAR_COTIZACION = Herramienta(
     "Entrega la lista final de módulos adicionales cotizados. Los precios los pone el sistema desde la lista oficial.",
     control.ArgsEntregarCotizacion, terminal=True)
 
+ENTREGAR_CONFIGURACION = Herramienta(
+    "entregar_configuracion",
+    "Entrega la configuración del sitio ya generada con generar_configuracion. Termina tu trabajo.",
+    control.ArgsEntregarConfiguracion, terminal=True)
+
 DE_DOMINIO = [BUSCAR_CATALOGO, CONSULTAR_PRECIOS, RESOLVER_DEPENDENCIAS, LEER_PERFIL, GUARDAR_PERFIL,
               REGISTRAR_SOLICITUD, GENERAR_CONFIGURACION, GENERAR_COTIZACION_PDF, EMITIR_COTIZACION]
 
 HERRAMIENTAS_ANALISTA = [BUSCAR_CATALOGO, CONSULTAR_PRECIOS, RESOLVER_DEPENDENCIAS, LEER_PERFIL,
                          REGISTRAR_SOLICITUD, PREGUNTAR_AL_DUENO, ENTREGAR_PROPUESTA]
 
-HERRAMIENTAS_COTIZADOR = [CONSULTAR_PRECIOS, RESOLVER_DEPENDENCIAS, GENERAR_CONFIGURACION,
-                          GENERAR_COTIZACION_PDF, ENTREGAR_COTIZACION]
+HERRAMIENTAS_COTIZADOR = [CONSULTAR_PRECIOS, RESOLVER_DEPENDENCIAS, GENERAR_COTIZACION_PDF, ENTREGAR_COTIZACION]
+
+HERRAMIENTAS_CONFIGURADOR = [GENERAR_CONFIGURACION, ENTREGAR_CONFIGURACION]

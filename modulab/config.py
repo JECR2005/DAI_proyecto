@@ -23,7 +23,7 @@ def _env(nombre: str, defecto: str = "") -> str:
 MODELO = _env("MODELO", "gemini")
 # Verifiquen el nombre exacto disponible en su cuenta antes de usarlo.
 GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-3.5-flash-lite")
-GROQ_MODEL = _env("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = _env("GROQ_MODEL", "openai/gpt-oss-120b")
 GEMINI_API_KEY = _env("GEMINI_API_KEY")
 GROQ_API_KEY = _env("GROQ_API_KEY")
 TEMPERATURA = 0.0
@@ -50,8 +50,10 @@ OUTPUTS_DIR = RAIZ / "outputs"
 TRAZAS_DIR = OUTPUTS_DIR / "trazas"
 CACHE_DIR = RAIZ / ".cache_llm"
 
-# --- SQL Server (se usa desde el jue 26) -----------------------------------
-DB_SERVER = _env("MODULAB_DB_SERVER", r"localhost\SQLEXPRESS")
+# --- Base de datos -----------------------------------------------------------
+# MODULAB_DB: "sqlserver" (real) o "memoria" (pruebas y demo simulada).
+BASE_DATOS = _env("MODULAB_DB", "sqlserver")
+DB_SERVER = _env("MODULAB_DB_SERVER", "localhost")
 DB_NAME = _env("MODULAB_DB_NAME", "modulab")
 DB_USER = _env("MODULAB_DB_USER")
 DB_PASSWORD = _env("MODULAB_DB_PASSWORD")

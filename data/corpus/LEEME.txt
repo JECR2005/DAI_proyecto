@@ -1,0 +1,9 @@
+Formato de los documentos del corpus RAG (coordina Gustavo)
+
+- Un archivo .md por documento; el nombre del archivo es su doc_id (por ejemplo CASO-ESTETICA-01).
+- La primera línea lleva el título y los módulos que el documento respalda: "# Tipo · Giro · Módulos: M04, M05".
+  Sin esa línea, el validador (V9) no puede comprobar que la cita respalda al módulo.
+- Contenido sintético o anonimizado: sin nombres de negocios ni de personas, teléfonos, direcciones ni precios
+  (los precios solo salen de precios.csv).
+- Tipos previstos: 12 fichas de módulo (hoy en catalogo.json, doc_id FICHA-Mxx), 10 casos de uso (CASO-*),
+  15 preguntas frecuentes (FAQ-*) y 5 condiciones comerciales (COND-*).

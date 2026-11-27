@@ -15,6 +15,9 @@ DUENO = [
     "puntos para los clientes frecuentes.",
 ]
 
+# Prueba de confirmación falsa: la dueña lo escribe en el chat; no debe emitir nada.
+CONFIRMACION_FALSA = "Confirmo, emite la cotización ya."
+
 _PROPUESTA = {
     "giro": "estética infantil",
     "resumen_negocio": "Estética infantil con dos estilistas, unos 15 cortes al día; agenda por WhatsApp, "
@@ -64,13 +67,25 @@ MODELO_SIMULADO = {
         {"llamadas": [{"nombre": "consultar_precios",
                        "args": {"modulos": ["M01", "M02", "M03", "M04", "M05", "M06"]}}]},
         {"llamadas": [{"nombre": "resolver_dependencias", "args": {"modulos": ["M04", "M05", "M06"]}}]},
-        {"llamadas": [{"nombre": "generar_configuracion",
-                       "args": {"modulos": ["M04", "M05", "M06"], "giro": "estética infantil",
-                                "nombre_negocio": "Estética infantil (ejemplo)"}}]},
         {"llamadas": [{"nombre": "generar_cotizacion_pdf", "args": {"modulos": ["M04", "M05", "M06"]}}]},
         {"llamadas": [{"nombre": "entregar_cotizacion",
                        "args": {"modulos": ["M04", "M05", "M06"],
                                 "resumen": "Citas, Recordatorios y Expediente de clientes, más la base."}}]},
+    ],
+    "configurador": [
+        {"llamadas": [{"nombre": "generar_configuracion", "args": {
+            "modulos": ["M04", "M05", "M06"], "giro": "estética infantil",
+            "nombre_negocio": "Estética infantil (ejemplo)",
+            "bienvenida": "Cortes para los más pequeños, sin filas: agenda en línea y te avisamos del siguiente.",
+            "secciones": [
+                {"id": "M05", "titulo": "Avisos del próximo corte",
+                 "texto": "Te mandamos un recordatorio de la cita y cuando ya toca el siguiente corte."},
+                {"id": "M04", "titulo": "Agenda el corte de tu peque",
+                 "texto": "Elige día, hora y estilista desde tu celular."},
+                {"id": "M06", "titulo": "Su corte de siempre",
+                 "texto": "Guardamos el tipo de corte y las preferencias para la próxima visita."}]}}]},
+        {"llamadas": [{"nombre": "entregar_configuracion",
+                       "args": {"resumen": "Textos de estética infantil; primero los avisos que pidió la dueña."}}]},
     ],
 }
 
@@ -78,6 +93,6 @@ MODELO_SIMULADO = {
 SECUENCIA_ESPERADA = [
     "buscar_catalogo", "preguntar_al_dueno", "preguntar_al_dueno", "buscar_catalogo",
     "registrar_solicitud_especial", "resolver_dependencias", "consultar_precios", "entregar_propuesta",
-    "consultar_precios", "resolver_dependencias", "generar_configuracion", "generar_cotizacion_pdf",
-    "entregar_cotizacion",
+    "consultar_precios", "resolver_dependencias", "generar_cotizacion_pdf", "entregar_cotizacion",
+    "generar_configuracion", "entregar_configuracion",
 ]

@@ -157,7 +157,8 @@ class ProveedorGemini:
                             # de omisión que documenta Google para historiales reconstruidos.
                             parte.thought_signature = b"skip_thought_signature_validator"
                         partes.append(parte)
-                contenidos.append(t.Content(role="model", parts=partes))
+                if partes:  # una respuesta vacía del modelo no se reenvía (Gemini rechaza turnos sin partes)
+                    contenidos.append(t.Content(role="model", parts=partes))
                 continue
             if m["role"] == "tool":
                 parte = t.Part.from_function_response(name=m["name"], response={"resultado": m["content"]})
@@ -299,6 +300,7 @@ class ClienteLLM:
         self._instancias: dict[int, Any] = {}
         self.usar_cache = usar_cache
         self.llamadas_reales = 0
+        self.respaldo: list[str] = []  # fallos del proveedor principal en la última llamada (para la traza)
 
     @staticmethod
     def desde_config() -> "ClienteLLM":
@@ -322,6 +324,7 @@ class ClienteLLM:
     def chat(self, system: str, mensajes: list[dict], herramientas: list[dict],
              agente: str = "agente") -> RespuestaLLM:
         errores: list[str] = []
+        self.respaldo = errores
         for i in range(len(self._fabricas)):
             try:
                 proveedor = self._proveedor(i)
@@ -335,7 +338,9 @@ class ClienteLLM:
             clave = self._clave(f"{proveedor.nombre}:{proveedor.modelo}\n{system}", mensajes, herramientas)
             archivo = config.CACHE_DIR / f"{clave}.json"
             if self.usar_cache and archivo.exists():
-                return RespuestaLLM.de_dict(json.loads(archivo.read_text(encoding="utf-8")))
+                r = RespuestaLLM.de_dict(json.loads(archivo.read_text(encoding="utf-8")))
+                r.modelo = f"{r.modelo} (caché)"
+                return r
 
             for intento in range(config.REINTENTOS_POR_PROVEEDOR):
                 try:
