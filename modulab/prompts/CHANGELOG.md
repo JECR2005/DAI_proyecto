@@ -61,3 +61,5 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
 - Corrida 14:36: 5/6. Fonda (`a3810526a3e4`): en el paso 8 Gemini llamó una herramienta que no se le ofreció.
   Ahora el bucle no la ejecuta, y si el analista agota sus 8 pasos el orquestador le da una sola vuelta más
   (otros 8) con la instrucción de entregar o preguntar. Cada vuelta respeta el tope.
+- Corrida 14:42 en la rama: 6/6 (`outputs/casos_dev/20261127_1442_gemini.json`). El Configurador entregó en los 6.
+  Quedan congelados también `cotizador_v2.md` (md5 818e5d0e…) y `configurador_v1.md` (md5 1fad5217…).

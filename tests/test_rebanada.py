@@ -367,7 +367,9 @@ def test_prompts_congelados():
     import hashlib
     from modulab import config
     congelados = {"analista_v2.md": "31ff3f07bf3dec149ad29a143a5ed327",
-                  "cotizador_v1.md": "573af3e4ab193d87685adbaa3d36511d"}
+                  "cotizador_v1.md": "573af3e4ab193d87685adbaa3d36511d",
+                  "cotizador_v2.md": "818e5d0e8c6d57b51975980f3b95f13b",     # en uso desde el Configurador
+                  "configurador_v1.md": "1fad52179eaaf7ff72acc966d59abb3d"}
     for nombre, md5 in congelados.items():
         assert hashlib.md5((config.PROMPTS_DIR / nombre).read_bytes()).hexdigest() == md5, f"{nombre} cambió"
 
