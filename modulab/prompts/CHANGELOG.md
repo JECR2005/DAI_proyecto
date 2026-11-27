@@ -18,3 +18,12 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
   presupuesto obliga a elegir), preguntar antes de entregar. Motivo: misma corrida, 0 preguntas;
   eligió Inventario sobre Expediente sin preguntar si anotan preferencias.
 - Bloque `<perfil_guardado>` para clientes que regresan con su código NEG.
+
+## 26-nov (noche) · sin cambio de prompt; correcciones en código por los casos de desarrollo
+- Primera corrida de `python -m modulab.casos_dev` (Gemini): 3/6. Las tres fallas eran de código, no de prompt:
+  - fonda (`6399b1927af8`): `buscar_catalogo` no devolvía la ficha al buscar por id ("M10") y el analista
+    agotó los 8 pasos. Ahora un id en la consulta trae su ficha primero.
+  - presupuesto bajo (`698928515145`): la regla "sí cabe" no contaba dependencias (M05 requiere M04) y empujó
+    al modelo a pasarse a $5,800 de $4,000. Ahora el costo incluye lo que el módulo requiere.
+  - estética (`7424f2803d39`): el cotizador respondió vacío y la conversación terminó en error. Ahora se le
+    pide cerrar con `entregar_cotizacion` en lugar de terminar.

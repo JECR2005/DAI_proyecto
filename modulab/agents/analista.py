@@ -61,9 +61,12 @@ def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
                 f"${-sobra:,.0f}). Pasa a fuera_presupuesto lo que el dueño priorizó menos, sin quitar lo que eligió. "
                 "Si el dueño dijo que puede gastar más, actualiza el campo presupuesto con la cifra que dio.")
         for f in propuesta.fuera_presupuesto:
-            if f.id in precios and f.id not in incluidos and precios[f.id]["precio"] <= sobra:
+            if f.id not in precios or f.id in incluidos:
+                continue
+            costo = sum(l["precio"] for l in lineas_de(incluidos + [f.id])) - total  # con sus dependencias
+            if costo <= sobra:
                 errores.append(
-                    f"{f.id} ({catalogo[f.id]['nombre']}, ${precios[f.id]['precio']:,.0f}) sí cabe: tu total es "
+                    f"{f.id} ({catalogo[f.id]['nombre']}, ${costo:,.0f} con lo que requiere) sí cabe: tu total es "
                     f"${total:,.0f} de ${propuesta.presupuesto:,.0f} (sobran ${sobra:,.0f}). Inclúyelo, o si el dueño "
                     "dijo que no lo quiere, ponlo en descartados con lo que dijo. No quites lo que el dueño eligió.")
 

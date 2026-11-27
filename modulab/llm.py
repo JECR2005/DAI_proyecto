@@ -157,7 +157,8 @@ class ProveedorGemini:
                             # de omisión que documenta Google para historiales reconstruidos.
                             parte.thought_signature = b"skip_thought_signature_validator"
                         partes.append(parte)
-                contenidos.append(t.Content(role="model", parts=partes))
+                if partes:  # una respuesta vacía del modelo no se reenvía (Gemini rechaza turnos sin partes)
+                    contenidos.append(t.Content(role="model", parts=partes))
                 continue
             if m["role"] == "tool":
                 parte = t.Part.from_function_response(name=m["name"], response={"resultado": m["content"]})

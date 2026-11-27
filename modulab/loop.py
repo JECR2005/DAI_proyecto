@@ -66,8 +66,13 @@ def esquema_plano(modelo: type[BaseModel]) -> dict:
 
 def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas: list[Herramienta],
                     cliente: ClienteLLM, trazador: Trazador,
-                    max_pasos: int = config.MAX_PASOS_POR_TURNO) -> ResultadoAgente:
-    """Corre un turno del agente. `mensajes` se modifica en su lugar (memoria del agente)."""
+                    max_pasos: int = config.MAX_PASOS_POR_TURNO,
+                    solo_herramientas: bool = False) -> ResultadoAgente:
+    """Corre un turno del agente. `mensajes` se modifica en su lugar (memoria del agente).
+
+    solo_herramientas: el agente siempre termina con una herramienta terminal (el cotizador); si
+    responde solo texto o vacío, se le pide cerrar en lugar de terminar el turno (caso del 26-nov).
+    """
     registro = {h.nombre: h for h in herramientas}
     especificaciones = [h.especificacion() for h in herramientas]
     resultado = ResultadoAgente()
@@ -96,6 +101,11 @@ def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas
                        latencia_ms=r.latencia_ms)
 
         if not r.llamadas:
+            if solo_herramientas:
+                trazador.registrar(**comunes, error="respondió sin llamar herramientas; se le pide cerrar")
+                mensajes.append({"role": "user", "content": "[orquestador] No respondas con texto: termina "
+                                 "llamando a la herramienta que entrega tu resultado."})
+                continue
             trazador.registrar(**comunes)
             resultado.texto = r.texto
             return resultado

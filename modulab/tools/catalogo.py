@@ -48,10 +48,15 @@ class ArgsBuscarCatalogo(BaseModel):
 
 def buscar_catalogo(args: ArgsBuscarCatalogo) -> dict:
     consulta = _palabras(args.consulta)
+    # Si el modelo pide módulos por id ("M07"), su ficha va primero (caso fonda del 26-nov).
+    pedidos = re.findall(r"\bM\d{2}\b", args.consulta.upper())
     # Coincidir en una sola palabra de una consulta larga es ruido ("clientes" aparece en todo).
     minimo = 2 if len(consulta) >= 3 else 1
     puntuados = []
     for doc in _documentos():
+        if doc["tipo"] == "ficha" and doc["modulo"] in pedidos:
+            puntuados.append((100 - pedidos.index(doc["modulo"]), doc))
+            continue
         puntos = len(consulta & _palabras(doc["texto"]))
         if puntos >= minimo:
             puntuados.append((puntos, doc))

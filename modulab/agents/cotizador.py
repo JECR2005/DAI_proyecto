@@ -32,7 +32,8 @@ def ejecutar(propuesta: Propuesta, cliente: ClienteLLM, trazador: Trazador,
     if correcciones:
         contenido += f"\n\nEl validador rechazó la entrega anterior. Corrige: {correcciones}"
     mensajes = [{"role": "user", "content": contenido}]
-    return ejecutar_agente(NOMBRE, prompt(), mensajes, HERRAMIENTAS_COTIZADOR, cliente, trazador)
+    return ejecutar_agente(NOMBRE, prompt(), mensajes, HERRAMIENTAS_COTIZADOR, cliente, trazador,
+                           solo_herramientas=True)
 
 
 def armar_cotizacion(modulos: list[str], propuesta: Propuesta) -> Cotizacion:

@@ -273,3 +273,32 @@ def test_casos_dev_revisa_la_propuesta_sin_emitir():
     exigente = {**estetica, "debe": ["M07"], "no_debe": ["M06"]}
     res = correr(exigente, ClienteLLM([ProveedorSimulado(MODELO_SIMULADO)], usar_cache=False))
     assert not res["ok"] and any("M07" in f for f in res["fallas"]) and any("M06" in f for f in res["fallas"])
+
+
+# ------------------------------------------------------------------ casos de desarrollo del 26-nov
+def test_buscar_por_id_de_modulo_devuelve_su_ficha():
+    """Caso fonda (6399b1927af8): el analista buscó 'M10 catalogo modulo' y nunca obtuvo la ficha; gastó 8 pasos."""
+    from modulab.tools.catalogo import ArgsBuscarCatalogo, buscar_catalogo
+    assert buscar_catalogo(ArgsBuscarCatalogo(consulta="M10 catalogo modulo"))["resultados"][0]["doc_id"] == "FICHA-M10"
+    ids = [r["doc_id"] for r in buscar_catalogo(ArgsBuscarCatalogo(consulta="fichas M07 M08 M09"))["resultados"][:3]]
+    assert ids == ["FICHA-M07", "FICHA-M08", "FICHA-M09"]
+
+
+def test_lo_que_cabe_cuenta_sus_dependencias():
+    """Caso presupuesto bajo (698928515145): 'M05 sí cabe' ignoraba que M05 requiere M04 y llevó el total a $5,800."""
+    from modulab.agents.analista import revisar_coherencia
+    base = MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]
+    solo_base = Propuesta.model_validate({**base, "presupuesto": 4000, "modulos": [], "descartados": [],
+        "fuera_presupuesto": [{"id": "M04", "motivo": "no alcanza"}, {"id": "M05", "motivo": "no alcanza"}]})
+    assert revisar_coherencia(solo_base, preguntas_hechas=1) == []
+
+
+def test_cotizador_que_responde_sin_herramienta_recibe_otra_oportunidad():
+    """Caso estética (7424f2803d39): el cotizador respondió vacío en el paso 5 y la conversación terminó en error."""
+    import copy as _copy
+    guion = _copy.deepcopy(MODELO_SIMULADO)
+    guion["cotizador"].insert(len(guion["cotizador"]) - 1, {"texto": None, "llamadas": []})
+    orq = _orquestador(guion)
+    for texto in DUENO:
+        r = orq.responder("s", texto)
+    assert r.cotizacion is not None and r.cotizacion.total == 7300
