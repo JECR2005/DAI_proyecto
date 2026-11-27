@@ -77,10 +77,18 @@ def ejecutar_agente(agente: str, system: str, mensajes: list[dict], herramientas
     especificaciones = [h.especificacion() for h in herramientas]
     resultado = ResultadoAgente()
 
+    cierres = [h.especificacion() for h in herramientas if h.terminal]
     for paso in range(1, max_pasos + 1):
         resultado.pasos = paso
+        ofrecidas = especificaciones
+        if paso == max_pasos and cierres:
+            # Último paso: solo herramientas de cierre, para que el turno termine en lugar de agotarse
+            # (caso fonda del 27-nov: necesitaba 9 pasos y llegó al tope de 8 sin entregar).
+            ofrecidas = cierres
+            mensajes.append({"role": "user", "content": "[orquestador] Es tu último paso de este turno: "
+                             "entrega tu resultado o haz la pregunta que te falta."})
         try:
-            r = cliente.chat(system, mensajes, especificaciones, agente=agente)
+            r = cliente.chat(system, mensajes, ofrecidas, agente=agente)
             if getattr(cliente, "respaldo", None):  # el principal falló y respondió el de respaldo
                 trazador.registrar(agente=agente, paso=paso, modelo=r.modelo,
                                    error="se usó el modelo de respaldo: " + " | ".join(cliente.respaldo)[:300])

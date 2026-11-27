@@ -55,3 +55,6 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
   El código rechaza secciones de módulos que el sitio no tendrá y cualquier precio en los textos;
   si el Configurador no entrega, se genera la maqueta genérica y queda en la traza.
 - Entra a `v1.0` solo si pasan las pruebas y los 6 casos de desarrollo con el modelo real.
+- Corrida 14:31 en la rama: 5/6. La fonda (`8bc7e3c80fc5`) necesitó 9 pasos y llegó al tope de 8 sin entregar
+  (no era del Configurador; en la corrida anterior pasó de suerte). Se mantiene el tope de 8: en el último paso
+  el agente solo recibe sus herramientas de cierre (preguntar o entregar), así el turno siempre termina.

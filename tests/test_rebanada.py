@@ -370,3 +370,29 @@ def test_prompts_congelados():
                   "cotizador_v1.md": "573af3e4ab193d87685adbaa3d36511d"}
     for nombre, md5 in congelados.items():
         assert hashlib.md5((config.PROMPTS_DIR / nombre).read_bytes()).hexdigest() == md5, f"{nombre} cambió"
+
+
+def test_en_el_ultimo_paso_el_agente_solo_puede_cerrar():
+    """Caso fonda (8bc7e3c80fc5): el analista necesitaba 9 pasos y llegó al tope de 8 sin entregar."""
+    from modulab.llm import LlamadaHerramienta, RespuestaLLM
+    from modulab.loop import ejecutar_agente
+    from modulab.tools import HERRAMIENTAS_ANALISTA
+    from modulab.tracing import Trazador
+
+    class SiempreBusca:
+        nombre, modelo = "falso", "x"
+        def __init__(self): self.ofrecidas = []
+        def chat(self, system, mensajes, herramientas):
+            nombres = [h["nombre"] for h in herramientas]
+            self.ofrecidas.append(nombres)
+            if "buscar_catalogo" in nombres:  # mientras pueda, sigue buscando
+                return RespuestaLLM(texto=None, modelo="falso", llamadas=[LlamadaHerramienta(
+                    id=f"b{len(self.ofrecidas)}", nombre="buscar_catalogo", args={"consulta": "fonda"})])
+            return RespuestaLLM(texto=None, modelo="falso", llamadas=[LlamadaHerramienta(
+                id="q", nombre="preguntar_al_dueno", args={"pregunta": "¿Qué te urge más?"})])
+
+    falso = SiempreBusca()
+    r = ejecutar_agente("analista", "s", [{"role": "user", "content": "fonda"}], HERRAMIENTAS_ANALISTA,
+                        ClienteLLM([falso], usar_cache=False), Trazador(carpeta=config.OUTPUTS_DIR / "trazas_pruebas"), 8)
+    assert r.terminal == "preguntar_al_dueno" and r.pasos == 8 and not r.agotado
+    assert set(falso.ofrecidas[-1]) == {"preguntar_al_dueno", "entregar_propuesta"}
