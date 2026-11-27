@@ -4,6 +4,8 @@ Agente consultor que entrevista al dueño de un negocio, recomienda los módulos
 
 ## Instalación
 
+Guía completa paso a paso para Windows, con SQL Server, llaves de los modelos y problemas frecuentes: **[docs/INSTALACION.md](docs/INSTALACION.md)**. Resumen:
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate            # Windows  (Linux/Mac: source .venv/bin/activate)
@@ -112,7 +114,7 @@ El cambio principal es sustituir la búsqueda provisional por el RAG sin tocar a
 
 ### Ambos
 
-- [ ] Instalar: crear `.venv`, `pip install -r requirements.txt` y copiar `.env.example` a `.env` con sus propias llaves. El `.env` nunca se sube a GitHub ni se comparte por chat.
+- [ ] Instalar el sistema siguiendo [docs/INSTALACION.md](docs/INSTALACION.md), con sus propias llaves. El `.env` nunca se sube a GitHub ni se comparte por chat.
 - [ ] Correr `python -m pytest -q` (las pruebas de SQL Server se omiten si no hay base) y `python -m modulab.casos_dev`.
 - [ ] Probar `python -m modulab.demo --guion --trazas` y `streamlit run app.py` con el caso de la estética.
 - [ ] Revisar la descripción de la estética en `modulab/guion_estetica.py`: sin datos de los niños ni de los papás.
