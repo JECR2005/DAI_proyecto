@@ -21,7 +21,7 @@ def ejecutar(mensajes: list[dict], cliente: ClienteLLM, trazador: Trazador,
     return ejecutar_agente(NOMBRE, prompt(), mensajes, herramientas, cliente, trazador)
 
 
-def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
+def revisar_coherencia(propuesta, preguntas_hechas: int, preguntar_recorte: bool = False) -> list[str]:
     """Reglas del analista que el prompt no logra garantizar (corridas reales del 25 y 26 nov).
 
     1. Sin haber preguntado nada, no puede descartar un módulo que el catálogo marca para el giro.
@@ -29,6 +29,8 @@ def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
        con lo que dijo el dueño).
     3. Si deja módulos del giro fuera por presupuesto sin haber preguntado, debe preguntar primero.
     4. El total no puede pasarse del presupuesto (corrida real COT-2026-0007: $8,900 de $8,000).
+       Con preguntar_recorte, la primera vez debe preguntarle al dueño qué deja fuera en lugar de elegir
+       solo (casos de desarrollo del 26-nov: quitó lo que la dueña había pedido).
     No sustituye al validador V1–V9 de Carlos: revisa decisiones de la entrevista, no cálculos.
     """
     from ..tools import datos
@@ -56,10 +58,15 @@ def revisar_coherencia(propuesta, preguntas_hechas: int) -> list[str]:
         total = sum(l["precio"] for l in lineas_de(incluidos))
         sobra = propuesta.presupuesto - total
         if sobra < 0:
-            errores.append(
-                f"Tu total es ${total:,.0f} y el presupuesto es ${propuesta.presupuesto:,.0f} (te pasas por "
-                f"${-sobra:,.0f}). Pasa a fuera_presupuesto lo que el dueño priorizó menos, sin quitar lo que eligió. "
-                "Si el dueño dijo que puede gastar más, actualiza el campo presupuesto con la cifra que dio.")
+            exceso = (f"Tu total es ${total:,.0f} y el presupuesto es ${propuesta.presupuesto:,.0f} (te pasas por "
+                      f"${-sobra:,.0f}). ")
+            if preguntar_recorte:
+                errores.append(exceso + "No decidas tú qué quitar: pregúntale al dueño (una sola pregunta, con el "
+                               "total y el precio de cada opción) qué prefiere dejar para después o si puede gastar más.")
+            else:
+                errores.append(exceso + "Pasa a fuera_presupuesto lo que el dueño priorizó menos, nunca lo que él "
+                               "pidió. Si el dueño dijo que puede gastar más, actualiza el campo presupuesto con la "
+                               "cifra que dio.")
         for f in propuesta.fuera_presupuesto:
             if f.id not in precios or f.id in incluidos:
                 continue

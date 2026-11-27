@@ -62,6 +62,7 @@ class EstadoSesion:
     folio: Optional[str] = None
     vigencia: Optional[str] = None
     cancelada: bool = False
+    recorte_consultado: bool = False  # ya se le preguntó al dueño qué dejar fuera
 
 
 class Orquestador:
@@ -141,7 +142,10 @@ class Orquestador:
                 return Respuesta(tipo="pregunta", texto=r.texto or "")
             propuesta = r.args
             duros = validator.validar_propuesta(propuesta)                       # bloquean la entrega
-            blandos = analista.revisar_coherencia(propuesta, estado.preguntas)   # calidad de la entrevista
+            preguntar = not estado.recorte_consultado and estado.preguntas < config.MAX_PREGUNTAS
+            blandos = analista.revisar_coherencia(propuesta, estado.preguntas, preguntar)  # calidad de la entrevista
+            if preguntar and any("pregúntale al dueño (una sola pregunta, con el total" in e for e in blandos):
+                estado.recorte_consultado = True  # solo se le pide preguntar una vez por sesión
             errores = duros + blandos
             if not errores:
                 break

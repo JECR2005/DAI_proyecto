@@ -302,3 +302,23 @@ def test_cotizador_que_responde_sin_herramienta_recibe_otra_oportunidad():
     for texto in DUENO:
         r = orq.responder("s", texto)
     assert r.cotizacion is not None and r.cotizacion.total == 7300
+
+
+def test_si_se_pasa_del_presupuesto_pregunta_al_dueno_en_vez_de_recortar_solo():
+    """Casos estética (d396fbe9932f) y presupuesto bajo (81b1026f21ba): al pasarse, el analista quitó lo que
+    la dueña había pedido (Recordatorios) o entregó excedido. La primera vez debe preguntarle qué deja fuera."""
+    import copy as _copy
+    from modulab.agents.analista import revisar_coherencia
+    base = MODELO_SIMULADO["analista"][-1]["llamadas"][0]["args"]
+    excedida = {**base, "fuera_presupuesto": [],
+                "modulos": base["modulos"] + [{"id": "M07", "motivo": "inventario", "doc_id": "FICHA-M07"}]}
+    errores = revisar_coherencia(Propuesta.model_validate(excedida), 1, preguntar_recorte=True)
+    assert any("te pasas por $900" in e and "pregúntale al dueño" in e for e in errores)
+
+    guion = _copy.deepcopy(MODELO_SIMULADO)
+    guion["analista"] = [
+        {"llamadas": [{"nombre": "entregar_propuesta", "args": excedida}]},
+        {"llamadas": [{"nombre": "preguntar_al_dueno", "args": {"pregunta": "¿Qué prefieres dejar para después?"}}]}]
+    orq = _orquestador(guion)
+    r = orq.responder("s", DUENO[0] + " " + DUENO[1])
+    assert r.tipo == "pregunta" and orq.sesiones["s"].recorte_consultado

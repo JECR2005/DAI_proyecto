@@ -27,3 +27,6 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
     al modelo a pasarse a $5,800 de $4,000. Ahora el costo incluye lo que el módulo requiere.
   - estética (`7424f2803d39`): el cotizador respondió vacío y la conversación terminó en error. Ahora se le
     pide cerrar con `entregar_cotizacion` en lugar de terminar.
+- Segunda corrida: 4/6. En estética y presupuesto bajo, al pasarse del presupuesto el analista recortó por su
+  cuenta (quitó Recordatorios, que la dueña sí pidió) o entregó excedido. Ahora, la primera vez que se pasa,
+  el orquestador le pide preguntarle a la dueña qué deja fuera o si puede gastar más (una vez por sesión).
