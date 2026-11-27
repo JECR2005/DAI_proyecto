@@ -360,3 +360,13 @@ def test_el_analista_no_inventa_presupuesto():
     errores = revisar_coherencia(inventada, 2, montos_dueno={8000.0, 15.0})
     assert any("nunca dijo $9,000" in e for e in errores)
     assert not any("nunca dijo" in e for e in revisar_coherencia(Propuesta.model_validate(base), 2, montos_dueno={8000.0}))
+
+
+def test_prompts_congelados():
+    """Congelados el 27-nov tras 6/6 casos de desarrollo: cambiarlos exige versión nueva y entrada en CHANGELOG."""
+    import hashlib
+    from modulab import config
+    congelados = {"analista_v2.md": "31ff3f07bf3dec149ad29a143a5ed327",
+                  "cotizador_v1.md": "573af3e4ab193d87685adbaa3d36511d"}
+    for nombre, md5 in congelados.items():
+        assert hashlib.md5((config.PROMPTS_DIR / nombre).read_bytes()).hexdigest() == md5, f"{nombre} cambió"

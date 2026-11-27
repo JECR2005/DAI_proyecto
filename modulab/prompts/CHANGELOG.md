@@ -42,3 +42,9 @@ Las versiones descartadas y su motivo van en docs/decisiones.md.
     que el dueño no escribió.
   - fonda (`a7f1a716f23e`): el agente cerró tras una pregunta y nunca oyó la app de repartidores, que venía en el
     tercer mensaje del guion. Se corrigió el guion (la petición va en el primer mensaje), no el agente.
+
+## 27-nov 14:30 · PROMPTS CONGELADOS
+- `analista_v2.md` (md5 31ff3f07…) y `cotizador_v1.md` (md5 573af3e4…) quedan congelados tras 6/6 casos de
+  desarrollo (`outputs/casos_dev/20261127_1423_gemini.json`). No cambian antes de la evaluación final de Carlos.
+- `tests/test_rebanada.py::test_prompts_congelados` falla si se modifican. Cambiarlos exige una versión nueva
+  (v3), su entrada aquí y volver a correr los 6 casos.
