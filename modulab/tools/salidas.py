@@ -48,6 +48,24 @@ class ArgsGenerarConfiguracion(BaseModel):
         default_factory=list, description="Título y texto por módulo, en el orden en que deben aparecer")
 
 
+# Estilos propios de la maqueta: se ve igual en el navegador y dentro de Streamlit con tema claro u oscuro.
+_ESTILO = """<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f6f4f1; color: #1f2933; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { background: #2f5d62; color: #fff; padding: 22px 24px 16px; }
+header h1 { margin: 0 0 6px; font-size: 24px; }
+header p { margin: 0 0 14px; max-width: 640px; color: #e3eeee; }
+nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+nav li { background: rgba(255,255,255,.16); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+main { padding: 18px 24px 8px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+section { background: #fff; border: 1px solid #e4e0da; border-radius: 10px; padding: 14px 16px; }
+section h2 { margin: 0 0 6px; font-size: 17px; color: #2f5d62; }
+section p { margin: 0 0 6px; }
+section em { color: #7b8794; font-size: 12px; }
+footer { padding: 10px 24px 18px; color: #7b8794; font-size: 12px; }
+</style>"""
+
 _PRECIO = re.compile(r"\$|\d[\d,.]*\s*(pesos|mxn)\b", re.IGNORECASE)
 
 
@@ -83,9 +101,12 @@ def generar_configuracion(args: ArgsGenerarConfiguracion) -> dict:
         f"<p><em>Datos de ejemplo.</em></p></section>" for s in secciones_cfg)
     ruta_html = carpeta / "maqueta.html"
     ruta_html.write_text(
-        f"<!DOCTYPE html><html lang='es'><meta charset='utf-8'><title>{html.escape(args.nombre_negocio)}</title>"
+        f"<!DOCTYPE html><html lang='es'><head><meta charset='utf-8'>"
+        f"<meta name='viewport' content='width=device-width, initial-scale=1'>"
+        f"<title>{html.escape(args.nombre_negocio)}</title>{_ESTILO}</head>"
         f"<body><header><h1>{html.escape(args.nombre_negocio)}</h1>{bienvenida}<nav><ul>{menu}</ul></nav></header>"
-        f"{secciones}<footer>Maqueta generada por ModuLab</footer></body></html>", encoding="utf-8")
+        f"<main>{secciones}</main><footer>Maqueta generada por ModuLab · datos de ejemplo</footer></body></html>",
+        encoding="utf-8")
     return {"config_json": str(ruta_json), "maqueta_html": str(ruta_html), "modulos_activos": finales}
 
 

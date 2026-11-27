@@ -52,3 +52,11 @@ def test_si_el_configurador_falla_se_genera_la_maqueta_generica():
     orq, r = _correr(guion)
     assert r.cotizacion.total == 7300 and "maqueta" in r.archivos
     assert any(t.agente == "configurador" and t.error for t in orq.sesiones["s"].trazador.registros)
+
+
+def test_la_maqueta_trae_sus_propios_estilos_y_no_depende_del_tema():
+    """En Streamlit con tema oscuro la maqueta salía con fondo transparente y texto negro (27-nov)."""
+    res = generar_configuracion(ArgsGenerarConfiguracion(modulos=["M04"], giro="estética infantil",
+                                                         bienvenida="Hola"))
+    html = open(res["maqueta_html"], encoding="utf-8").read()
+    assert "<style>" in html and "background" in html and "color-scheme: light" in html
